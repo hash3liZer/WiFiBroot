@@ -45,21 +45,20 @@ All options:
 ```
   -h, --help            show this help message and exit
   -i INTERFACE, --interface=INTERFACE
-                        Wireless Interface to use. Will be asked if not
-                        specified
+                        Monitor Interface to use.
   -e ESSID, --essid=ESSID
                         Targets AP's with the specified ESSIDs
   -b BSSID, --bssid=BSSID
                         Targets AP's with the specified BSSIDs
   -c CHANNEL, --channel=CHANNEL
-                        Target AP's the specified channels.
+                        Listen on specified Channel.
   -p PASSWORD, --password=PASSWORD
-                        Check the AP against provided WPA Key Passphrase
+                        Check the AP against provided WPA Key Passphrase. 
   -d DICTIONARY, --dictionary=DICTIONARY
                         Dictionary containing Passwords
   --newhandshake        Discard previous handshake and capture new one.
   -n, --nowrite         Do not Save the Captured Handshakes
-  -v, --verbose         Print Verbose Messages
+  -v, --verbose         Verbose Mode. More information and print hashes. 
 ```
 Under normal mode, it will print out a few important details and will print password if found. For research facilities, verbose mode will show you live packets as soon as they get captured and will print hexdump of computed hashes. The hashes will include, PMK (Pairwise Master Key), PTK (Pairwise Transient Key) and MIC (Message Integrity Code). An example given below: 
 

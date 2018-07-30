@@ -1,5 +1,7 @@
-# WiFiBroot
+# WiFiBroot - Cracking WPA/WPA2
 An extensive Tool for Cracking WPA/WPA2, managing handshakes and computing hashes.
+
+![WiFiBroot](https://user-images.githubusercontent.com/29171692/43396374-bead0ee2-941a-11e8-82d4-76061ccbfe96.png)
 
 
 ## DESCRIPTION
@@ -59,7 +61,10 @@ All options:
   -n, --nowrite         Do not Save the Captured Handshakes
   -v, --verbose         Print Verbose Messages
 ```
-Under normal mode, it will print out a few important details and will print password if found. For research facilities, verbose mode will show you live packets as soon as they get captured and will print hexdump of computed hashes. The hashes will include, PMK (Pairwise Master Key), PTK (Pairwise Transient Key) and MIC (Message Integrity Code). 
+Under normal mode, it will print out a few important details and will print password if found. For research facilities, verbose mode will show you live packets as soon as they get captured and will print hexdump of computed hashes. The hashes will include, PMK (Pairwise Master Key), PTK (Pairwise Transient Key) and MIC (Message Integrity Code). An example given below: 
+
+![hashes](https://user-images.githubusercontent.com/29171692/43396478-2340e7c0-941b-11e8-9077-7f3992968eb7.png)
+
 ## Support ##
 
 Website: [https://www.shelvoide.com](https://www.shellvoide.com)

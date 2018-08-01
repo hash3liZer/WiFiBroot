@@ -1,7 +1,8 @@
 # Shifter.py
 
 import re
-from scapy.layers.dot11 import EAPOL, Dot11Beacon, Dot11, Dot11Elt, RadioTap
+from scapy.layers.dot11 import EAPOL, Dot11Beacon, Dot11, Dot11Elt
+from scapy.layers.dot11 import RadioTap
 from scapy.all import sniff, conf
 from scapy.utils import PcapWriter, rdpcap
 

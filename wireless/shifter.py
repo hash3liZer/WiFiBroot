@@ -1,10 +1,18 @@
 # Shifter.py
 
-import re
-from scapy.layers.dot11 import EAPOL, Dot11Beacon, Dot11, Dot11Elt
+from scapy.layers.dot11 import Dot11Beacon
+from scapy.layers.dot11 import Dot11
+from scapy.layers.dot11 import Dot11Elt
 from scapy.layers.dot11 import RadioTap
-from scapy.all import sniff, conf
-from scapy.utils import PcapWriter, rdpcap
+from scapy.sendrecv import sniff
+from scapy.config import conf
+from scapy.utils import PcapWriter
+from scapy.utils import rdpcap
+import re
+try:
+	from scapy.layers.dot11 import EAPOL
+except ImportError:
+	from scapy.layers.eap import EAPOL
 
 class Shifter:
 

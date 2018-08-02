@@ -157,7 +157,7 @@ class Sniffer:
 		self.bssid = bssid
 		self.essid = essid
 		self.shift = Shifter(self.iface1.iface, self.bssid, self.essid, V__)
-		self.sig = signal(SIGINT, self.break_shifter)
+		signal(SIGINT, self.break_shifter)
 		self.aps()
 
 	def aps(self):
@@ -179,7 +179,6 @@ class Sniffer:
 			del self.screen
 
 		__HEADERS = [color.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+color.END]
-		self.sig = signal(SIGINT, lambda sig, frame: sys.exit())
 		tabulator__ = []
 		###
 		__sig_LIST = []
@@ -199,6 +198,7 @@ class Sniffer:
 			tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
 					ap['psk'], ap['channel'], ap['bssid'].upper()])
 		print "\n"+tabulate(tabulator__, headers=__HEADERS)+"\n"
+		os.kill(os.getpid(), SIGINT)
 
 class Phazer:
 
@@ -279,15 +279,15 @@ class Phazer:
 		pols = gen.get_pols()
 		self.call_PSK(pols, ap['essid'], ap['auth'])
 
-	def d_h_crack(self, ap):
+	def d_h_crack(self, ap, timeout):
 		global WRITE__
 
 		y_h = False
 
 		while not y_h:
 
-			pull.up('Locating Clients from AP to generate handshake. Sleeping for 20 Seconds. ')
-			self.sniper = Sniper(self.iface, ap['bssid'], ap['essid'], ap['channel'])
+			pull.up('Locating Clients from AP to generate handshake. Sleeping for %d Seconds. ' % timeout)
+			self.sniper = Sniper(self.iface, ap['bssid'], ap['essid'], ap['channel'], timeout)
 			self.sniper.cl_generator()
 			cls__ = self.sniper.clients()
 			pull.info('Clients Detected. Number of Connected Users: %d' % len(cls__))
@@ -353,6 +353,7 @@ def main():
 	parser.add_option('-d', '--dictionary', dest='dictionary', help="Dictionary containing Passwords")
 	parser.add_option('', '--newhandshake', dest='newhandshake', default=False, action="store_true", help="Discard previous handshake and capture new one. ")
 	parser.add_option('-n', '--nowrite', dest="write", default=True, action="store_false", help="Do not Save the Captured Handshakes")
+	parser.add_option('-t', '--timeout', dest="timeout", default=20, help="Specify timeout for locating target clients. ")
 	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
 	
 	(options, args) = parser.parse_args()
@@ -410,6 +411,7 @@ def main():
 
 	phaser = Phazer(sniffer)
 	target = phaser.get_input()
+	signal(SIGINT, lambda sig, frame: sys.exit())
 	pull.info("You've choosed \"%s\" with encryption %s" % (target['essid'], target['auth']))
 	if not phaser.verify_h_crack(target['bssid'])[0] or NEW_HAND == True:
 		if NEW_HAND:
@@ -418,7 +420,7 @@ def main():
 				pull.delete('Discarded Previous Handshake for "%s"' % (color.BOLD+target['essid']+color.END))
 			else:
 				pull.info('Attempting to Capture new handshake for "%s"' % (color.BOLD+target['essid']+color.END))
-		phaser.d_h_crack(target)
+		phaser.d_h_crack(target, int(options.timeout))
 	else:
 		pull.use("We've already got the handshake for this network. Attempting to Crack it.")
 		phaser.h_crack(target, phaser.verify_h_crack(target['bssid'])[1])

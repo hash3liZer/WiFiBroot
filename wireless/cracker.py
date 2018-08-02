@@ -1,8 +1,7 @@
 
 from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import Dot11Beacon
-from scapy.layers.dot11 import Raw
-from scapy.layers.dot11 import EAPOL
+from scapy.layers.dot11 import Raw    
 from pull import Pully
 from pbkdf2 import PBKDF2
 from screen import Display
@@ -14,7 +13,10 @@ import hashlib
 import sys
 import time
 import string
-
+try:
+	from scapy.layers.dot11 import EAPOL
+except ImportError:                                     # Support for new versions
+	from scapy.layers.eap import EAPOL 
 
 pull = Pully()
 

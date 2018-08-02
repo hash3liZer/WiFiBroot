@@ -1,5 +1,11 @@
 
-from scapy.all import *
+from scapy.sendrecv import sniff
+from scapy.sendrecv import sendp
+from scapy.config import conf
+from scapy.layers.dot11 import Dot11
+from scapy.layers.dot11 import RadioTap
+from scapy.layers.dot11 import Raw
+from scapy.layers.dot11 import Dot11Deauth
 import signal
 import sys
 import time
@@ -7,6 +13,10 @@ import threading
 import exceptions
 import binascii
 import os
+try:
+	from scapy.layers.dot11 import EAPOL
+except ImportError:
+	from scapy.layers.eap import EAPOL
 
 class Sniper:
 
@@ -17,12 +27,13 @@ class Sniper:
 	__c_TGT = ''
 	out__ = ['33:33:00:00:00:16', '33:33:ff:9d:df:fd', 'ff:ff:ff:ff:ff:ff', ]
 
-	def __init__(self, iface_instance, bssid, essid, channel):
+	def __init__(self, iface_instance, bssid, essid, channel, timeout):
 		self.iface_instance = iface_instance
 		self.iface = self.iface_instance.iface
 		self.bssid = bssid
 		self.essid = essid
 		self.ch = channel
+		self.timeout = timeout
 		self.channel_shifter = self.channel_shifter(self.ch)
 
 	def __str__(self):
@@ -40,7 +51,7 @@ class Sniper:
 	def cl_generator(self):
 		signal.signal(signal.SIGINT, self.sniff_breaker)
 		try:
-			sniff(iface=self.iface, prn=self.cl_generator_replay, timeout=20)
+			sniff(iface=self.iface, prn=self.cl_generator_replay, timeout=self.timeout)
 		except ValueError:
 			pass
 		finally:

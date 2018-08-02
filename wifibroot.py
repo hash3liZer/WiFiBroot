@@ -28,6 +28,7 @@ WRITE__ = True
 DICTIONARY = ''
 NEW_HAND = False
 V__ = bool(0)
+_KEY_ = None
 
 class Color:
 	WHITE = '\033[0m'
@@ -176,6 +177,7 @@ class Sniffer:
 				pass
 			self.screen.clear()
 			del self.screen
+
 		__HEADERS = [color.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+color.END]
 		self.sig = signal(SIGINT, lambda sig, frame: sys.exit())
 		tabulator__ = []
@@ -184,6 +186,7 @@ class Sniffer:
 		for ap in self.shift.results():
 			__sig_LIST.append(ap['pwr'])
 		__sig_LIST = sorted(__sig_LIST, reverse=True)
+		###
 		count = 1
 		for sig in __sig_LIST:
 			for ap in self.shift.results():
@@ -221,7 +224,7 @@ class Phazer:
 					return AP
 
 	def call_PSK(self, eapol, essid, enc):
-		self.psk = PSK(eapol, essid, enc, DICTIONARY, V__)
+		self.psk = PSK(eapol, essid, enc, DICTIONARY, V__, _KEY_)
 		pass__, _PMK_, _KCK_, _MIC_ = self.psk.broot()
 
 		if pass__:
@@ -339,25 +342,23 @@ class Phazer:
 			os.makedirs(directory)
 
 def main():
-	global WRITE__, DICTIONARY, NEW_HAND, V__
+	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_
 
 	parser = optparse.OptionParser()
-	parser.add_option('-i', '--interface', dest="interface", help="Wireless Interface to use. Will be asked if not specified")
+	parser.add_option('-i', '--interface', dest="interface", help="Monitor Wireless Interface to use")
 	parser.add_option('-e', '--essid', dest="essid", help="Targets AP's with the specified ESSIDs")
 	parser.add_option('-b', '--bssid', dest="bssid", help="Targets AP's with the specified BSSIDs")
-	parser.add_option('-c', '--channel', dest="channel", help="Target AP's the specified channels.")
-	parser.add_option('-p', '--password', dest="password", help="Check the AP against provided WPA Key Passphrase")
+	parser.add_option('-c', '--channel', dest="channel", help="Listen on specified channel.")
+	parser.add_option('-p', '--passwords', dest="password", help="Check the AP against provided WPA Key Passphrases, seperated by comma.")
 	parser.add_option('-d', '--dictionary', dest='dictionary', help="Dictionary containing Passwords")
 	parser.add_option('', '--newhandshake', dest='newhandshake', default=False, action="store_true", help="Discard previous handshake and capture new one. ")
 	parser.add_option('-n', '--nowrite', dest="write", default=True, action="store_false", help="Do not Save the Captured Handshakes")
-	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print Verbose Messages")
+	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
 	
 	(options, args) = parser.parse_args()
 
 	if options.password != None:
-		supplied_key = options.password
-	else: 
-		supplied_key = None	
+		_KEY_ = options.password	
 
 	if options.write == False:
 		WRITE__ = not True

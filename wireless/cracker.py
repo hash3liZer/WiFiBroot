@@ -34,11 +34,12 @@ class PSK:
 
 	# Just a line break. Keep things tidy and clean. 
 
-	def __init__(self, eapol, essid, enc, dictionary, verbose):
+	def __init__(self, eapol, essid, enc, dictionary, verbose, key=None):
 		self.pkt_i = eapol[0]
 		self.pkt_ii = eapol[1]
 		self.pkt_iii = eapol[2]
 		self.pkt_iv = eapol[3]
+		self.key = key
 		self.mic = binascii.hexlify(self.pkt_ii.getlayer(Raw).load)[154:186]
 		self.essid = essid
 		self.encryption = enc
@@ -115,11 +116,21 @@ class PSK:
 		else:
 			return c_pass
 
+	def pass_list(self):
+		_list_ = []
+		if self.key is None:
+			file__ = open(self.dict, 'r')
+			_list_ = self.d_passes+file__.readlines()
+			file__.close()
+		else:
+			for key in self.key.split(','):
+				_list_.append(key)
+		return _list_
+
 	def broot(self, screen=None):
-		last_pass__, self._count_ = '', 0
-		file__ = open(self.dict, 'r')
-		pass_list = self.d_passes+file__.readlines()
-		file__.close()
+		last_pass__, self._count_, pass_list = '', 0, []
+		pass_list = self.pass_list()
+
 		for pass__ in pass_list:
 
 			self.C_PMK__, self.C_PTK__, self.C_MIC__ = self.hash(pass__.rstrip('\n'))

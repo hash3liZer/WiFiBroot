@@ -2,17 +2,14 @@
 import sys
 import os
 
-__log__ = r'''
-                                                                ___________
-  %s\\\\\/////\\\\\/////    |||||   ||||||          __*__  __*__ |___________|
-  %s \\\   //  \\    //  .  |     . ||   |    __    /   \  /   \     |__|
-  %s  \\\///    \\\///   |  ||||| | |||||| \//  \\ ||||||||||||||    |__|
-  %s   \\//      \\//    |  |     | ||   | ||      ||||||||||||||    |__|
-  %s    \/       _\/_    |  |     | |||||| ||       \___/  \___/     |__|
-  %s    ________/    \___________   ____________||  ||     _________________|%s
-                                 \_/              ||  ____| 
-
-            %sv.1.0. Coded by @hash3liZer%s
+__log__ = r'''%s
+             _____  ___   ___               |
+ ||      ||*|     *||  \ |   \   ___   _____|__
+ ||      ||||_____|||___||___|| /   \ /   \ |
+  \  /\  / ||     |||   ||   / ||   |||   |||   ||
+   \/  \/  ||     |||__/ |   \  \___/ \___/ \\__/ 
+%s 
+          %sv1.0. Coded by @hash3liZer.%s
 '''
 
 class Pully:
@@ -93,4 +90,4 @@ class Pully:
 		sys.stdout.write(self.LINEUP)
 
 	def logo(self):
-		print __log__ % (self.BOLD+self.RED, self.GREEN, self.GREEN, self.GREEN, self.RED, self.END, self.END, self.BOLD, self.END)
+		print __log__ % (self.RED+self.BOLD, self.END, self.BOLD, self.END)

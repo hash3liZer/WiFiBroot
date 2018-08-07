@@ -162,21 +162,19 @@ class Sniffer:
 
 	def aps(self):
 		pull.up('Scanning through the Area. Press [%sCTRL+C%s] to Stop. ' % (color.BOLD, color.END))
-		if V__:
-			time.sleep(1)
-			self.screen = Display()
-			thread = threading.Thread(target=self.screen.Shifter, args=(self.shift, self.iface1,), name="Verbose Sniffer")
-			thread.daemon = True
-			thread.start()
+		time.sleep(1)
+		self.screen = Display()
+		thread = threading.Thread(target=self.screen.Shifter, args=(self.shift, self.iface1,), name="Verbose Sniffer")
+		thread.daemon = True
+		thread.start()
 		self.shift.run()
 
 	def break_shifter(self, sig, frame):
-		if V__:
-			self.screen.shifter_break = True
-			while not self.screen.Shifter_stopped:
-				pass
-			self.screen.clear()
-			del self.screen
+		self.screen.shifter_break = True
+		while not self.screen.Shifter_stopped:
+			pass
+		self.screen.clear()
+		del self.screen
 
 		__HEADERS = [color.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+color.END]
 		tabulator__ = []
@@ -344,19 +342,24 @@ class Phazer:
 def main():
 	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_
 
-	parser = optparse.OptionParser()
-	parser.add_option('-i', '--interface', dest="interface", help="Monitor Wireless Interface to use")
-	parser.add_option('-e', '--essid', dest="essid", help="Targets AP's with the specified ESSIDs")
-	parser.add_option('-b', '--bssid', dest="bssid", help="Targets AP's with the specified BSSIDs")
-	parser.add_option('-c', '--channel', dest="channel", help="Listen on specified channel.")
-	parser.add_option('-p', '--passwords', dest="password", help="Check the AP against provided WPA Key Passphrases, seperated by comma.")
-	parser.add_option('-d', '--dictionary', dest='dictionary', help="Dictionary containing Passwords")
+	parser = optparse.OptionParser(add_help_option=False)
+	parser.add_option('-h', '--help', dest='help', default=False, action="store_true", help="Show this help manual")
+	parser.add_option('-i', '--interface', dest="interface", type='string', help="Monitor Wireless Interface to use")
+	parser.add_option('-e', '--essid', dest="essid", type='string', help="Targets AP's with the specified ESSIDs")
+	parser.add_option('-b', '--bssid', dest="bssid", type='string', help="Targets AP's with the specified BSSIDs")
+	parser.add_option('-c', '--channel', dest="channel", type='int', help="Listen on specified channel.")
+	parser.add_option('-p', '--passwords', dest="password", type='string', help="Check the AP against provided WPA Key Passphrases, seperated by comma.")
+	parser.add_option('-d', '--dictionary', dest='dictionary', type='string', help="Dictionary containing Passwords")
 	parser.add_option('', '--newhandshake', dest='newhandshake', default=False, action="store_true", help="Discard previous handshake and capture new one. ")
-	parser.add_option('-n', '--nowrite', dest="write", default=True, action="store_false", help="Do not Save the Captured Handshakes")
-	parser.add_option('-t', '--timeout', dest="timeout", default=20, help="Specify timeout for locating target clients. ")
+	parser.add_option('', '--nowrite', dest="write", default=True, action="store_false", help="Do not Save the Captured Handshakes")
+	parser.add_option('-t', '--timeout', dest="timeout", default=20, type='int', help="Specify timeout for locating target clients. ")
 	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
 	
 	(options, args) = parser.parse_args()
+
+	if options.help == True:
+		pull.help()
+		sys.exit(0)
 
 	if options.password != None:
 		_KEY_ = options.password	
@@ -387,8 +390,7 @@ def main():
 		if options.channel == None:
 			iface.hopper()
 		else:
-			__channels = ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14')
-			print repr(options.channel)
+			__channels = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
 			if options.channel in __channels:
 				iface.put_channel(options.channel)
 			else:

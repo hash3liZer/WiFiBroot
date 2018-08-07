@@ -1,15 +1,38 @@
 
 import sys
 import os
+import random
 
 __log__ = r'''%s
-             _____  ___   ___               |
- ||      ||*|     *||  \ |   \   ___   _____|__
- ||      ||||_____|||___||___|| /   \ /   \ |
-  \  /\  / ||     |||   ||   / ||   |||   |||   ||
-   \/  \/  ||     |||__/ |   \  \___/ \___/ \\__/ 
+ _        ___  ___ ___  ___   ___
+ \\  _ /\*\___*\__\\__\/   \ /   \\___
+  \  \\  \\\   \\__\\ /\  ) \\  ) \\  \
+   \__\\__\\\   \\__\\ \\__ / \___/ \__\
 %s 
           %sv1.0. Coded by @hash3liZer.%s
+'''
+
+__help__ = r'''
+General:
+    -h, --help          Show this help Manual. 
+    -i, --interface     Monitor Interface to use
+    -v, --verbose       Verbose Mode. Print hashes too. 
+    -t, --timeout       Timeout for clients detection.
+                        Default: 20
+        --nowrite       Do not save the handshake after
+                        it is captured
+        --newhandshake  Capture new handshake discard 
+                        previous one
+    -p, --passwords     Comma Seperated list of passwords
+                        instead of dictionary
+    -d, --dictionary    Use this dictionary instead of
+                        default one.
+
+Filters: 
+    -e, --essid         ESSID of listening network
+    -b, --bssid         BSSID of target network.
+    -c, --channel       Channel interface should be listening
+                        on. Default: ALL
 '''
 
 class Pully:
@@ -89,5 +112,12 @@ class Pully:
 	def lineup(self, *args, **kwargs):
 		sys.stdout.write(self.LINEUP)
 
+	def random_picker(self):
+		seq = (self.RED, self.GREEN, self.YELLOW, self.BLUE)
+		return random.choice(seq)
+
 	def logo(self):
-		print __log__ % (self.RED+self.BOLD, self.END, self.BOLD, self.END)
+		print __log__ % (self.BOLD+self.random_picker(), self.END, self.BOLD, self.END)
+
+	def help(self):
+		print __help__

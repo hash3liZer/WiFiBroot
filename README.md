@@ -45,26 +45,27 @@ $ sudo python wifibroot.py -i wlan1mon [options]
 ```
 Options: 
 ```
-Options:
-  -h, --help            show this help message and exit
-  -i INTERFACE, --interface=INTERFACE
-                        Monitor Wireless Interface to use
-  -e ESSID, --essid=ESSID
-                        Targets AP's with the specified ESSIDs
-  -b BSSID, --bssid=BSSID
-                        Targets AP's with the specified BSSIDs
-  -c CHANNEL, --channel=CHANNEL
-                        Listen on specified channel.
-  -p PASSWORD, --passwords=PASSWORD
-                        Check the AP against provided WPA Key Passphrases,
-                        seperated by comma.
-  -d DICTIONARY, --dictionary=DICTIONARY
-                        Dictionary containing Passwords
-  --newhandshake        Discard previous handshake and capture new one.
-  -n, --nowrite         Do not Save the Captured Handshakes
-  -t TIMEOUT, --timeout=TIMEOUT
-                        Specify timeout for locating target clients.
-  -v, --verbose         Print hashes and verbose messages.
+General:
+    -h, --help          Show this help Manual. 
+    -i, --interface     Monitor Interface to use
+    -v, --verbose       Verbose Mode. Print hashes too. 
+    -t, --timeout       Timeout for clients detection.
+                        Default: 20
+        --nowrite       Do not save the handshake after
+                        it is captured
+        --newhandshake  Capture new handshake discard 
+                        previous one
+    -p, --passwords     Comma Seperated list of passwords
+                        instead of dictionary
+    -d, --dictionary    Use this dictionary instead of
+                        default one.
+
+Filters: 
+    -e, --essid         ESSID of listening network
+    -b, --bssid         BSSID of target network.
+    -c, --channel       Channel interface should be listening
+                        on. Default: ALL
+
 ```
 Under normal mode, it will print out a few important details and will print password if found. For research facilities, verbose mode will show you live packets as soon as they get captured and will print hexdump of computed hashes. The hashes will include, PMK (Pairwise Master Key), PTK (Pairwise Transient Key) and MIC (Message Integrity Code). An example given below: 
 

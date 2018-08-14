@@ -23,6 +23,8 @@ General:
                         it is captured
         --newhandshake  Capture new handshake discard 
                         previous one
+        --deauth        Number of deauthentication packets
+                        to send. Default: 32
     -p, --passwords     Comma Seperated list of passwords
                         instead of dictionary
     -d, --dictionary    Use this dictionary instead of

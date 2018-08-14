@@ -277,7 +277,7 @@ class Phazer:
 		pols = gen.get_pols()
 		self.call_PSK(pols, ap['essid'], ap['auth'])
 
-	def d_h_crack(self, ap, timeout):
+	def d_h_crack(self, ap, timeout, deauth):
 		global WRITE__
 
 		y_h = False
@@ -298,7 +298,7 @@ class Phazer:
 					else:
 						pull.up('Attempting to Dissociate %s from Access Point.'\
 									 % (color.RED+tup[0].upper()+color.END))
-					pkts__ = self.sniper.shoot(tup[0])
+					pkts__ = self.sniper.shoot(tup[0], deauth)
 					if V__:
 						pull.up('Checking For Valid Handshake b/w "%s" and "%s"'\
 									 % (color.BOLD+ap['essid']+color.END, color.BOLD+tup[0].upper()+color.END))
@@ -352,6 +352,7 @@ def main():
 	parser.add_option('-d', '--dictionary', dest='dictionary', type='string', help="Dictionary containing Passwords")
 	parser.add_option('', '--newhandshake', dest='newhandshake', default=False, action="store_true", help="Discard previous handshake and capture new one. ")
 	parser.add_option('', '--nowrite', dest="write", default=True, action="store_false", help="Do not Save the Captured Handshakes")
+	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send. ")
 	parser.add_option('-t', '--timeout', dest="timeout", default=20, type='int', help="Specify timeout for locating target clients. ")
 	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
 	
@@ -422,7 +423,7 @@ def main():
 				pull.delete('Discarded Previous Handshake for "%s"' % (color.BOLD+target['essid']+color.END))
 			else:
 				pull.info('Attempting to Capture new handshake for "%s"' % (color.BOLD+target['essid']+color.END))
-		phaser.d_h_crack(target, int(options.timeout))
+		phaser.d_h_crack(target, int(options.timeout), options.deauth)
 	else:
 		pull.use("We've already got the handshake for this network. Attempting to Crack it.")
 		phaser.h_crack(target, phaser.verify_h_crack(target['bssid'])[1])

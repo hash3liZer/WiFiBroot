@@ -16,6 +16,8 @@ __help__ = r'''
 General:
     -h, --help          Show this help Manual. 
     -i, --interface     Monitor Interface to use
+    -m, --mode          WiFiBroot mode, Default: 1
+                        See below information.      
     -v, --verbose       Verbose Mode. Print hashes too. 
     -t, --timeout       Timeout for clients detection.
                         Default: 20
@@ -35,6 +37,18 @@ Filters:
     -b, --bssid         BSSID of target network.
     -c, --channel       Channel interface should be listening
                         on. Default: ALL
+
+Handshake Mode (4 EAPOLS):
+    This mode requires to first capture the handshake 
+    and then accordingly crack the hash. 
+
+    -m, --mode          Must be 1 in this case
+
+Cracking Mode (PMKID):
+    This Mode does not require handshake to be captured. 
+    Fast and more reliable. Works with WPA2 networks. 
+
+    -m, --mode          Must be 2 in this case
 '''
 
 class Pully:

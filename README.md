@@ -121,7 +121,7 @@ $ python wifibroot.py -i wlan1mon -p "password,anotherpassword,password2"  # And
 A recent loophole discovery in WPA2 which was discovered by Jens Steube the owner of hashcat tool has been recently added to the script in Version 1.1. All the process remains same, what changes is just the mode paramter. To run the script in pmkid mode: 
 
 ```
-$ python wifibroot --mode 2 --verbose --diction /path/to/file
+$ python wifibroot --mode 2 --verbose --dictionary /path/to/file
 ```
 ### Research Mode: 
 

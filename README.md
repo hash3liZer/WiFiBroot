@@ -48,6 +48,8 @@ Options:
 General:
     -h, --help          Show this help Manual. 
     -i, --interface     Monitor Interface to use
+    -m, --mode          WiFiBroot mode, Default: 1
+                        See below information.      
     -v, --verbose       Verbose Mode. Print hashes too. 
     -t, --timeout       Timeout for clients detection.
                         Default: 20
@@ -55,8 +57,8 @@ General:
                         it is captured
         --newhandshake  Capture new handshake discard 
                         previous one
-        --deauth        Number of Deauth Frames to Send.
-                        Default: 32
+        --deauth        Number of deauthentication packets
+                        to send. Default: 32
     -p, --passwords     Comma Seperated list of passwords
                         instead of dictionary
     -d, --dictionary    Use this dictionary instead of
@@ -68,6 +70,17 @@ Filters:
     -c, --channel       Channel interface should be listening
                         on. Default: ALL
 
+Handshake Mode (4 EAPOLS):
+    This mode requires to first capture the handshake 
+    and then accordingly crack the hash. 
+
+    -m, --mode          Must be 1 in this case
+
+Cracking Mode (PMKID):
+    This Mode does not require handshake to be captured. 
+    Fast and more reliable. Works with WPA2 networks. 
+
+    -m, --mode          Must be 2 in this case
 ```
 Under normal mode, it will print out a few important details and will print password if found. For research facilities, verbose mode will show you live packets as soon as they get captured and will print hexdump of computed hashes. The hashes will include, PMK (Pairwise Master Key), PTK (Pairwise Transient Key) and MIC (Message Integrity Code). An example given below: 
 
@@ -102,6 +115,13 @@ $ python wifibroot.py -i wlan1mon -d /path/to/dict
 
 # Passwing Passwords from console: 
 $ python wifibroot.py -i wlan1mon -p "password,anotherpassword,password2"  # And so on ... 
+```
+
+### Cracking through PMKID
+A recent loophole discovery in WPA2 which was discovered by Jens Steube the owner of hashcat tool has been recently added to the script in Version 1.1. All the process remains same, what changes is just the mode paramter. To run the script in pmkid mode: 
+
+```
+$ python wifibroot --mode 2 --verbose --diction /path/to/file
 ```
 ### Research Mode: 
 

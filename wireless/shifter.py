@@ -156,7 +156,7 @@ class Shifter:
 				s_or_n = self.filtertify(bssid.lower(), layer_data__)
 				if s_or_n:
 					self.cells.append({'essid': layer_data__['essid'], 'bssid': bssid, 'channel': layer_data__['channel'], 'auth': layer_data__['auth'], \
-						'cipher': layer_data__['cipher'], 'psk': layer_data__['psk'], 'pwr': self.dBM_sig(pkt)})
+						'cipher': layer_data__['cipher'], 'psk': layer_data__['psk'], 'pwr': self.dBM_sig(pkt), 'beacon': pkt})
 			else:
 				for ap in self.cells:
 					if ap['bssid'] == bssid:

@@ -68,25 +68,32 @@ class PMKID:
 	def enumerate_asso_fields(self, pkt):
 		elts = pkt.getlayer(Dot11Elt)
 		__data, count = {}, 0
+			
 		try:
 			while isinstance(elts[count], Dot11Elt):
-				if elts[count].ID == 0 or elts[count].ID == 1 or elts[count].ID == 48:    #ESSID #Rates
+				if elts[count].ID == 0 or elts[count].ID == 1 or elts[count].ID == 48 or elts[count].ID == 5 or elts[count].ID == 50 or elts[count].ID == 221:    #ESSID #Rates
 					__data[ elts[count].ID ] = {'ID': elts[count].ID, 'len': elts[count].len, 'info': elts[count].info}
 				count += 1
-		except IndexError: 
+		except IndexError:
 			pass
+
 		return __data
 
 	def auth_frame_blueprint(self, ap, cl):
 		return RadioTap() / Dot11(addr1=ap, addr2=cl, addr3=ap) / Dot11Auth(seqnum=1)
 
+	def form_asso_layers(self, efields, _pkt):
+		_st_layer = _pkt
+		for fie, val in efields.items():
+			if fie == 0 or fie == 1 or fie == 5 or fie == 48 or fie ==50 or fie == 221:
+				_st_layer = _st_layer / Dot11Elt(ID=val['ID'], len=val['len'], info=val['info'])
+		return _st_layer
+
 	def asso_frame_blueprint(self, ap, cl):
 		capibility = self.beacon.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}")
 		efields = self.enumerate_asso_fields(self.beacon)
-		return RadioTap() / Dot11(addr1=ap, addr2=cl, addr3=ap) / Dot11AssoReq(cap=capibility, listen_interval=3) / \
-				Dot11Elt(ID=efields[0]['ID'], len=efields[0]['len'], info=efields[0]['info']) / \
-				Dot11Elt(ID=efields[1]['ID'], len=efields[1]['len'], info=efields[1]['info']) / \
-				Dot11Elt(ID=efields[48]['ID'], len=efields[48]['len'], info=efields[48]['info'])
+		_pkt = RadioTap() / Dot11(addr1=ap, addr2=cl, addr3=ap) / Dot11AssoReq(cap=capibility, listen_interval=3)
+		return self.form_asso_layers(efields, _pkt)
 
 	def auth_sniffer(self, iface):
 		try:

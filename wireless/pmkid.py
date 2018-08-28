@@ -168,7 +168,7 @@ class PMKID:
 
 		while not self.__ASSO_STEP:
 			self.pull.up("1 Frames %s > %s %s[Association Request]%s" % (self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
-			sendp(self.asso, iface=self.iface, count=3, verbose=False)
+			sendp(self.asso, iface=self.iface, count=1, verbose=False)
 			time.sleep(2)
 
 		return self.__ASSO_STEP

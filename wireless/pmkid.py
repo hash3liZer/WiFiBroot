@@ -168,7 +168,7 @@ class PMKID:
 
 		while not self.__ASSO_STEP:
 			self.pull.up("1 Frames %s > %s %s[Association Request]%s" % (self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
-			sendp(self.asso, iface=self.iface, count=1, verbose=False)
+			sendp(self.asso, iface=self.iface, count=3, verbose=False)
 			time.sleep(2)
 
 		return self.__ASSO_STEP
@@ -194,7 +194,7 @@ class PMKID:
 	def crack(self):
 		fPMKID = '00000000000000000000000000000000'
 		PMKID = binascii.hexlify(self.__EAPOL.getlayer(Raw).load)[202:234]
-		if PMKID != fPMKID:
+		if PMKID != fPMKID and PMKID != '':
 			self.pull.up("PMKID Located (%s)" % PMKID)
 			_pmk = self.crack_the_pmk(PMKID)
 			return _pmk

@@ -219,7 +219,7 @@ class Phazer:
 			if V__:
 				pull.right('PMK: ')
 				print _PMK_
-				pull.right('KCK: ')
+				pull.right('PTK: ')
 				print _KCK_
 				pull.right('MIC: ')
 				print _MIC_
@@ -336,10 +336,17 @@ class pmkid_GEN:
 		self.channel = self.channel(self.ap_instance['channel'])
 
 	def auth_gen(self):
-		return self.pmkid.dev_conn()
+		to_return = self.pmkid.dev_conn()
+		self.pmkid._PMKID__AUTH_STEP = False
+		return to_return
 
 	def asso_gen(self):
-		return self.pmkid.asso_conn()
+		_PACT = False
+		while not _PACT:
+			_PACT = self.pmkid.asso_conn()
+			pull.special("Times Up! Attempting to authenticate with Access Point.")
+			self.auth_gen()
+		return _PACT
 
 	def lets_crack(self):
 		_pass, _hash, _hash_ = self.pmkid.crack()
@@ -359,7 +366,7 @@ class pmkid_GEN:
 		return _ch
 
 def grace_exit(sig, frame):
-	pull.up("Closing. Cleaning up the mess! ")
+	pull.special("Closing. Cleaning up the mess! ")
 	time.sleep(2)
 	sys.exit(0)
 

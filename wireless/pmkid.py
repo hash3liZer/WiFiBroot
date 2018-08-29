@@ -43,6 +43,7 @@ class PMKID:
 		self.passwords = passwords
 		self.pull = pull
 		self.verbose = verbose
+		self.retry_limit = 40
 		self.auth = self.auth_frame_blueprint(self.ap, self.cl)
 		self.asso = self.asso_frame_blueprint(self.ap, self.cl)
 
@@ -139,7 +140,7 @@ class PMKID:
 		except ValueError:
 			pass
 		finally:
-			self.__AUTH_STATUS = False
+			self.__ASSO_STATUS = False
 
 	def get_asso_resp(self, pkt):
 		if pkt.haslayer(Dot11AssoResp):
@@ -169,14 +170,22 @@ class PMKID:
 				raise ValueError
 
 	def asso_conn(self):
-		asso_catcher = threading.Thread(target=self.asso_sniffer, args=(self.iface,), name="Association Depender")
-		asso_catcher.daemon = True
-		asso_catcher.start()
+		if not self.__ASSO_STATUS:
+			asso_catcher = threading.Thread(target=self.asso_sniffer, args=(self.iface,), name="Association Depender")
+			asso_catcher.daemon = True
+			asso_catcher.start()
+
+		_retry = 0
 
 		while not self.__ASSO_STEP:
 			self.pull.up("1 Frames %s > %s %s[Association Request]%s" % (self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
 			sendp(self.asso, iface=self.iface, count=1, verbose=False)
-			time.sleep(2)
+			time.sleep(2); _retry += 1
+			if _retry >= self.retry_limit:
+				self.pull.right("Maximum Limit Reached for Association Requests.")
+				self.pull.info("Sleeping! Would restart the process in 30 seconds. ")
+				time.sleep(30)
+				break
 
 		return self.__ASSO_STEP
 

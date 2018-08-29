@@ -118,6 +118,9 @@ class Pully:
 		print "%s[#]%s %s" % (self.CYAN, self.END, statement)
 		return
 
+	def special(self, statement, *args, **kwargs):
+		print "%s[/]%s %s" % (self.PURPLE, self.END, statement)
+
 	def linebreak(self):
 		print "\n"
 		return

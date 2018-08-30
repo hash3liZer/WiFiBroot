@@ -49,6 +49,8 @@ Cracking Mode (PMKID):
     Fast and more reliable. Works with WPA2 networks. 
 
     -m, --mode          Must be 2 in this case
+        --frames        No of Auth and Association frames
+                        to send. 
 '''
 
 class Pully:

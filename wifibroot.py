@@ -329,10 +329,11 @@ class Phazer:
 
 class pmkid_GEN:
 
-	def __init__(self, iface_instance, ap_instance):
+	def __init__(self, iface_instance, ap_instance, no_frames):
 		self.ap_instance = ap_instance
 		self.iface_instance = iface_instance
-		self.pmkid = PMKID(self.ap_instance['bssid'], self.ap_instance['essid'], self.iface_instance.iface, self.ap_instance['beacon'], DICTIONARY, _KEY_, pull, V__)
+		self.pmkid = PMKID(self.ap_instance['bssid'], self.ap_instance['essid'], self.iface_instance.iface, self.ap_instance['beacon'],\
+								 DICTIONARY, _KEY_, pull, V__, no_frames)
 		self.channel = self.channel(self.ap_instance['channel'])
 
 	def is_version2(self):
@@ -392,6 +393,7 @@ def main():
 	parser.add_option('', '--newhandshake', dest='newhandshake', default=False, action="store_true", help="Discard previous handshake and capture new one. ")
 	parser.add_option('', '--nowrite', dest="write", default=True, action="store_false", help="Do not Save the Captured Handshakes")
 	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send. ")
+	parser.add_option('', '--frames', dest='frames', type='int', default=0, help="Number of Auth and Association Frames")
 	parser.add_option('-t', '--timeout', dest="timeout", default=20, type='int', help="Specify timeout for locating target clients. ")
 	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
 	
@@ -468,7 +470,7 @@ def main():
 			pull.use("We've already got the handshake for this network. Attempting to Crack it.")
 			phaser.h_crack(target, phaser.verify_h_crack(target['bssid'])[1])
 	elif options.mode == 2:
-		pmk = pmkid_GEN(iface, Phazer(sniffer).get_input())
+		pmk = pmkid_GEN(iface, Phazer(sniffer).get_input(), options.frames)
 		signal(SIGINT, grace_exit)
 		if pmk.is_version2():
 			if pmk.auth_gen():

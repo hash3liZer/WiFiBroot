@@ -33,7 +33,7 @@ class PMKID:
 
 	__EAPOL = 0
 
-	def __init__(self, ap, essid, iface, beacon, _dict, passwords, pull, verbose):
+	def __init__(self, ap, essid, iface, beacon, _dict, passwords, pull, verbose, nframes):
 		self.iface = iface
 		self.essid = essid
 		self.ap = ap
@@ -46,6 +46,7 @@ class PMKID:
 		self.verbose = verbose
 		self.retry_limit = 40
 		self._randn = 1
+		self._nframes = nframes
 		self.auth = self.auth_frame_blueprint(self.ap, self.cl)
 		self.asso = self.asso_frame_blueprint(self.ap, self.cl)
 
@@ -248,6 +249,9 @@ class PMKID:
 		return (None, '', '')
 
 	def _randn_(self, _max):
-		self._randn = org().randomness(_max, self._randn)
+		if self._nframes == 0:
+			self._randn = org().randomness(_max, self._randn)
+		else:
+			self._randn = self._nframes
 		return
 		

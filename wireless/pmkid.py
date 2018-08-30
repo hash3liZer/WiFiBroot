@@ -7,6 +7,7 @@ from scapy.layers.dot11 import RadioTap
 from scapy.layers.dot11 import Dot11Elt
 from scapy.sendrecv import sniff
 from scapy.sendrecv import sendp
+from utils.macers import org
 from pbkdf2 import PBKDF2
 from utils import org
 from scapy.arch import get_if_raw_hwaddr
@@ -44,6 +45,7 @@ class PMKID:
 		self.pull = pull
 		self.verbose = verbose
 		self.retry_limit = 40
+		self._randn = 1
 		self.auth = self.auth_frame_blueprint(self.ap, self.cl)
 		self.asso = self.asso_frame_blueprint(self.ap, self.cl)
 
@@ -125,7 +127,8 @@ class PMKID:
 		auth_catcher.start()
 		
 		while not self.__AUTH_STEP:
-			self.pull.up("2 Frames %s > %s %s[Open Authentication]%s" % (self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
+			self._randn_(3)
+			self.pull.up("%i Frames %s > %s %s[Open Authentication]%s" % (self._randn, self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
 			sendp(self.auth, iface=self.iface, count=2, verbose=False)
 			if not self.__AUTH_STATUS:
 				break
@@ -178,7 +181,8 @@ class PMKID:
 		_retry = 0
 
 		while not self.__ASSO_STEP:
-			self.pull.up("1 Frames %s > %s %s[Association Request]%s" % (self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
+			self._randn_(4)
+			self.pull.up("%i Frames %s > %s %s[Association Request]%s" % (self._randn, self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
 			sendp(self.asso, iface=self.iface, count=1, verbose=False)
 			time.sleep(2); _retry += 1
 			if _retry >= self.retry_limit:
@@ -242,4 +246,8 @@ class PMKID:
 				self.pull.lineup()
 
 		return (None, '', '')
+
+	def _randn_(self, _max):
+		self._randn = org().randomness(_max, self._randn)
+		return
 		

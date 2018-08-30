@@ -335,6 +335,12 @@ class pmkid_GEN:
 		self.pmkid = PMKID(self.ap_instance['bssid'], self.ap_instance['essid'], self.iface_instance.iface, self.ap_instance['beacon'], DICTIONARY, _KEY_, pull, V__)
 		self.channel = self.channel(self.ap_instance['channel'])
 
+	def is_version2(self):
+		if 'wpa2' in self.ap_instance['auth'].lower():
+			return True
+		else:
+			return False
+
 	def auth_gen(self):
 		to_return = self.pmkid.dev_conn()
 		self.pmkid._PMKID__AUTH_STEP = False
@@ -344,8 +350,9 @@ class pmkid_GEN:
 		_PACT = False
 		while not _PACT:
 			_PACT = self.pmkid.asso_conn()
-			pull.special("Times Up! Attempting to authenticate with Access Point.")
-			self.auth_gen()
+			if not _PACT:   # When Error was detected. 
+				pull.special("Times Up! Attempting to authenticate with Access Point.")
+				self.auth_gen()
 		return _PACT
 
 	def lets_crack(self):
@@ -463,9 +470,13 @@ def main():
 	elif options.mode == 2:
 		pmk = pmkid_GEN(iface, Phazer(sniffer).get_input())
 		signal(SIGINT, grace_exit)
-		if pmk.auth_gen():
-			if pmk.asso_gen():
-				pmk.lets_crack()
+		if pmk.is_version2():
+			if pmk.auth_gen():
+				if pmk.asso_gen():
+					pmk.lets_crack()
+		else:
+			pull.error("Not vulnerable because it's not a WPA2 network.")
+			sys.exit(0)
 
 if __name__ == "__main__":
 	pull = Pully()

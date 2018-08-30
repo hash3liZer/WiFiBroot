@@ -1,9 +1,10 @@
 import sys
 import os
+import random
 
 class org:
 
-	def __init__(self, bssid):
+	def __init__(self, bssid=''):
 		self.bssid = bssid
 		self.org = self.findORG(self.bssid)
 
@@ -24,3 +25,9 @@ class org:
 		if not supported_platform or not is_a_tty:
 			return False
 		return True
+
+	def randomness(self, _max, last_num):
+		_to_return = last_num
+		while _to_return == last_num:
+			_to_return = random.randint(1, _max)
+		return _to_return

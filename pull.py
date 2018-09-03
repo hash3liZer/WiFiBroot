@@ -97,38 +97,38 @@ class Pully:
 		self.LINEUP = ''
 
 	def info(self, statement, *args, **kwargs):
-		print "%s[*]%s %s" % (self.YELLOW, self.END, statement)
+		print "%s[*]%s %s" % (self.BOLD+self.YELLOW, self.END, statement)
 		return
 
 	def error(self, statement, *args, **kwargs):
-		print "%s[!]%s %s" % (self.RED, self.END, statement)
+		print "%s[!]%s %s" % (self.BOLD+self.RED, self.END, statement)
 		return
 
 	def up(self, statement, *args, **kwargs):
-		print "%s[^]%s %s" % (self.BLUE, self.END, statement)
+		print "%s[^]%s %s" % (self.BOLD+self.BLUE, self.END, statement)
 		return
 
 	def use(self, statement, *args, **kwargs):
-		print "%s[$]%s %s" % (self.GREEN, self.END, statement)
+		print "%s[$]%s %s" % (self.BOLD+self.GREEN, self.END, statement)
 		return
 
 	def question(self, statement, *args, **kwargs):
-		q = raw_input("%s[?]%s %s" % (self.PURPLE, self.END, statement))
+		q = raw_input("%s[?]%s %s" % (self.BOLD+self.PURPLE, self.END, statement))
 		return q
 
 	def delete(self, statement, *args, **kwargs):
-		print "%s[#]%s %s" % (self.CYAN, self.END, statement)
+		print "%s[#]%s %s" % (self.BOLD+self.CYAN, self.END, statement)
 		return
 
 	def special(self, statement, *args, **kwargs):
-		print "%s[/]%s %s" % (self.PURPLE, self.END, statement)
+		print "%s[~]%s %s" % (self.BOLD+self.RED, self.END, statement)
 
 	def linebreak(self):
 		print "\n"
 		return
 
 	def right(self, statement, *args, **kwargs):
-		print "%s[>]%s %s" % (self.DARKCYAN, self.END, statement)
+		print "%s[>]%s %s" % (self.BOLD+self.DARKCYAN, self.END, statement)
 
 	def lineup(self, *args, **kwargs):
 		sys.stdout.write(self.LINEUP)

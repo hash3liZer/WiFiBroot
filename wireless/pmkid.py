@@ -33,6 +33,8 @@ class PMKID:
 
 	__EAPOL = 0
 
+	__M_PLACED = False
+
 	def __init__(self, ap, essid, iface, beacon, _dict, passwords, pull, verbose, nframes):
 		self.iface = iface
 		self.essid = essid
@@ -114,10 +116,19 @@ class PMKID:
 				sn = pkt.getlayer(Dot11).addr2.replace(':', '')
 				rc = pkt.getlayer(Dot11).addr1.replace(':', '')
 				if rc == self.cl.replace(':', '') and sn == self.ap.replace(':', ''):
-					self.pull.info("1 Frames %s > %s %s[Open Authentication]%s" % (self.ap.replace(':', '').upper(),\
-													 self.cl.replace(':', '').upper(), self.pull.YELLOW, self.pull.END))
 					if self.verbose:
-						self.pull.info("Authentication with Access Point %s[SuccessFull]%s" % (self.pull.GREEN, self.pull.END) )
+						self.pull.info("Received %s (%s) %s<%s %s (%s) %s[Open Authentication]%s" % \
+											(self.cl.replace(':', '').upper(), self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.RED, self.pull.END, self.ap.replace(':', '').upper(),\
+											self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.YELLOW, self.pull.END))
+						self.pull.info("Authentication %s (%s) %s>%s %s (%s) %s[SuccessFull]%s" % \
+											(self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+											self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.GREEN, self.pull.END))
+					else:
+						self.pull.info("Received %s %s<%s %s %s[Open Authentication]%s" % (self.cl.replace(':', '').upper(), self.pull.RED, self.pull.END,\
+													 self.ap.replace(':', '').upper(), self.pull.YELLOW, self.pull.END))
+						self.pull.info("Authentication %s %s>%s %s %s[SuccessFull]%s" % \
+											(self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+											self.pull.GREEN, self.pull.END))
 
 					self.__AUTH_STEP = bool(1)
 					raise ValueError
@@ -129,7 +140,13 @@ class PMKID:
 		
 		while not self.__AUTH_STEP:
 			self._randn_(3)
-			self.pull.up("%i Frames %s > %s %s[Open Authentication]%s" % (self._randn, self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
+			if self.verbose:
+				self.pull.up("%i Frames %s (%s) %s>%s %s (%s) %s[Open Authentication]%s" % \
+												 (self._randn, self.cl.replace(':', '').upper(), self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.RED, self.pull.END,\
+												 self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.BLUE, self.pull.END))
+			else:
+				self.pull.up("%i Frames %s %s>%s %s %s[Open Authentication]%s" % (self._randn, self.cl.replace(':', '').upper(), self.pull.RED, self.pull.END,\
+												 self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
 			sendp(self.auth, iface=self.iface, count=2, verbose=False)
 			if not self.__AUTH_STATUS:
 				break
@@ -152,11 +169,30 @@ class PMKID:
 				sn = pkt.getlayer(Dot11).addr2.replace(':', '')
 				rc = pkt.getlayer(Dot11).addr1.replace(':', '')
 				if rc == self.cl.replace(':', '') and sn == self.ap.replace(':', ''):
-					self.pull.info("1 Frames %s > %s %s[Association Response]%s" % (self.ap.replace(':', '').upper(),\
-													 self.cl.replace(':', '').upper(), self.pull.YELLOW, self.pull.END))
 					if self.verbose:
-						self.pull.info("Association with Access Point %s[SuccessFull]%s" % (self.pull.GREEN, self.pull.END) )
-						self.pull.info("Waiting For EAPOL to initate...")
+						self.pull.info("Received %s (%s) %s<%s %s (%s) %s[Association Response]%s" % \
+													(self.cl.replace(':', '').upper(), self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.RED, self.pull.END, self.ap.replace(':', '').upper(),\
+														self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.YELLOW, self.pull.END))
+					else:
+						self.pull.info("Received %s %s<%s %s %s[Association Response]%s" % (self.cl.replace(':', '').upper(), self.pull.RED, self.pull.END, self.pull.RED, self.pull.END,\
+													 self.ap.replace(':', '').upper(), self.pull.YELLOW, self.pull.END))
+
+					if not self.__M_PLACED:
+						if self.verbose:
+							self.pull.info("Authentication %s (%s) %s>%s %s (%s) %s[SuccessFull]%s" % \
+											(self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+											self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.GREEN, self.pull.END))
+							self.pull.info("EAPOL %s (%s) %s>%s %s (%s) %s[Waiting...]%s" % \
+											(self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+											self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.PURPLE, self.pull.END))
+						else:
+							self.pull.info("Authentication %s %s>%s %s %s[SuccessFull]%s" % \
+											(self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+											self.pull.GREEN, self.pull.END))
+							self.pull.info("EAPOL %s %s>%s %s %s[Waiting...]%s" % \
+											(self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+											self.pull.PURPLE, self.pull.END))
+						self.__M_PLACED = bool(1)
 
 		if pkt.haslayer(EAPOL):
 			sn = pkt.getlayer(Dot11).addr2.replace(':', '')
@@ -166,7 +202,7 @@ class PMKID:
 			fMIC = "00000000000000000000000000000000"
 			if sn == self.ap.replace(':', '') and nonce != fNONCE and mic == fMIC:
 				self.__ASSO_STEP = True
-				self.pull.up("EAPOL %s > %s %s[1 of 4]%s" % (self.ap.replace(':', '').upper(), self.cl.replace(':', '').upper(),\
+				self.pull.up("EAPOL %s %s>%s %s %s[1 of 4]%s" % (self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
 															 self.pull.BOLD+self.pull.GREEN, self.pull.END) )
 				if self.verbose:
 					self.pull.info("Successfull handshake initiated [%s]" % org(self.ap).org)
@@ -183,7 +219,15 @@ class PMKID:
 
 		while not self.__ASSO_STEP:
 			self._randn_(4)
-			self.pull.up("%i Frames %s > %s %s[Association Request]%s" % (self._randn, self.cl.replace(':', '').upper(), self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
+
+			if self.verbose:
+				self.pull.up("%i Frames %s (%s) %s>%s %s (%s) %s[Association Request]%s" % \
+									(self._randn, self.cl.replace(':', '').upper(), self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.RED, self.pull.END,\
+									 self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.BLUE, self.pull.END))
+			else:
+				self.pull.up("%i Frames %s %s>%s %s %s[Association Request]%s" % (self._randn, self.cl.replace(':', '').upper(), self.pull.RED, self.pull.END,\
+									self.ap.replace(':', '').upper(), self.pull.BLUE, self.pull.END))
+
 			sendp(self.asso, iface=self.iface, count=1, verbose=False)
 			time.sleep(2); _retry += 1
 			if _retry >= self.retry_limit:

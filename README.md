@@ -1,36 +1,23 @@
-# WiFiBroot - Cracking WPA/WPA2
-An extensive Tool for Cracking WPA/WPA2, managing handshakes and computing hashes and this is a proof of concept that half of the handshake can be used to crack WPA/WPA2. 
+![wifibroot](https://user-images.githubusercontent.com/29171692/45045286-eee92680-b08b-11e8-9d0a-cf3d4ee2cd5f.jpeg)
 
-![WiFiBroot](https://user-images.githubusercontent.com/29171692/43396374-bead0ee2-941a-11e8-82d4-76061ccbfe96.png)
+A tool for Cracking, testing and doing forensic activities on WiFi networks. Cracks password using handshakes and **PMKID** and pretty much simple interface to deal with, curretly provides two modes. 
 
 ## DESCRIPTION
-WiFiBroot is an extensive research tool for **WPA/WPA2** cracking and currently is under development. The version above provided may have some glitches while being designed. So, you are very my much welcome to contribute in this project by reporting anything you find unusual. WiFiBroot uses the handshakes along with provided dictionaries to crack passwords by computing various hashes like **PMK, PTK, KCK** and **MIC** etc. It uses linux device files and some internal linux commands to interact with the monitor interface. Further, it uses it own built-in wireless sniffer that sniffs wireless packets and further manipulates them. It works by first identifying networks in an area, choose one of them as target, tries to capture handshakes by sending deauth packets from AP to client and vice virsa and at the end, tries to guess the passwords by computing EAPOL hashes. 
+WiFiBroot is built to provide clients all-in-one facility for cracking WiFi (WPA/WPA2) networks. It heavily depends on **scapy**, a well-featured packet manipulation library in Python. Almost every process within is dependent somehow on scapy layers and other functions except for operating the wireless interface on a different channel. That will be done via native linux command **iwconfig** for which you maybe need *sudo* privileges. For the time, it provides two modes, one where it tries to capture handshake first and guess the password from the dictionary provided. The other mode uses PMKID to crack the same key. This one's faster and does not require any need for a handshake. Hashes like MIC, PMK and PTK can be seen as well by increasing the verbosity level. Currently, it provide two printing levels. One is normal one and the other is with **--verbose** option. The tool is still under development and the users who wanna take part in are very much welcome. 
 
-### Features :
-
-* Native Packet manipulation.
-* Sort clients and APs according to reported power and accordingly perform further action. Provides stability.
-* Auto-detect EAPOL and auto-send dissociation frames.
-* Store handshakes in a seperate directory.
-* Supports verbose mode
-
-### Drawback :
-
-* As of it is built in Python, you may not be able to acheive the speed of other C utilities like coWPAtty and aircrack.
+As of, it is built in Python, you may not be able to acheive the speed of C cracking programs. 
 
 ## Installation: 
 
-WiFiBroot heavily depends on scapy. So, you would need scapy installed. Almost, every other library would likely be installed on your system: 
+WiFiBroot heavily depends on scapy. So, you would need scapy installed. Almost, every other library would likely be installed on your system. Make sure the version you install for scapy should be `>=2.4.0`. Previous versions are likely to throw some unknown errors.
 
 ```
 $ sudo pip install scapy
 ```
-The script must be run under **root** privileges for the interface necassities. If you fell suppressed with this configuration, you can edit a few lines of verification in the source code.
-
-And then run the script: 
+The script is supposed to be run under **sudo** but it will still work even if not run under the root mode. The basic necessary arguments are: 
 
 ```
-$ sudo python wifibroot.py -i wlan1mon
+$ sudo python wifibroot.py -i [interface] -d /path/to/dictionary -m [mode]
 ```
 
 ## Documentation : ##

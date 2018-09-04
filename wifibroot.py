@@ -152,7 +152,7 @@ class Sniffer:
 	def aps(self):
 		pull.up('Scanning through the Area. Press [%sCTRL+C%s] to Stop. ' % (pull.BOLD, pull.END))
 		time.sleep(1)
-		self.screen = Display()
+		self.screen = Display(V__)
 		thread = threading.Thread(target=self.screen.Shifter, args=(self.shift, self.iface1,), name="Verbose Sniffer")
 		thread.daemon = True
 		thread.start()
@@ -165,7 +165,10 @@ class Sniffer:
 		self.screen.clear()
 		del self.screen
 
-		__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+pull.END]
+		if V__:
+			__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID', 'VENDOR'+pull.END]
+		else:
+			__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+pull.END]
 		tabulator__ = []
 		###
 		__sig_LIST = []
@@ -182,8 +185,12 @@ class Sniffer:
 					self.WiFiAP.append(ap)
 		###
 		for ap in self.WiFiAP:
-			tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
-					ap['psk'], ap['channel'], ap['bssid'].upper()])
+			if V__:
+				tabulator__.append([ap['count'], pull.GREEN+ap['essid']+pull.END, ap['pwr'], ap['auth'], ap['cipher'], \
+						ap['psk'], ap['channel'], ap['bssid'].upper(), pull.DARKCYAN+ap['vendor']+pull.END ])
+			else:
+				tabulator__.append([ap['count'], pull.GREEN+ap['essid']+pull.END, ap['pwr'], ap['auth'], ap['cipher'], \
+						ap['psk'], ap['channel'], ap['bssid'].upper()])
 		print "\n"+tabulate(tabulator__, headers=__HEADERS)+"\n"
 		os.kill(os.getpid(), SIGINT)
 
@@ -411,7 +418,8 @@ def main():
 		WRITE__ = not True
 
 	if options.dictionary == None:
-		DICTIONARY = os.path.join(os.getcwd(), 'dicts', 'list.txt')
+		pull.error("No dictionary was provided. Use -h or --help for more information. ")
+		sys.exit(-1)
 	else:
 		if os.path.isfile(options.dictionary):
 			DICTIONARY = options.dictionary
@@ -458,7 +466,9 @@ def main():
 		phaser = Phazer(sniffer)
 		target = phaser.get_input()
 		signal(SIGINT, grace_exit)
-		pull.info("You've choosed \"%s\" with encryption %s" % (target['essid'], target['auth']))
+		pull.info("Choosed Target: \n")
+		print tabulate([[target['essid'], target['bssid'].upper(), org(target['bssid']).org, str(target['channel']), target['auth']]],\
+					 headers=[pull.BOLD+'NAME', 'BSSID', 'VENDOR', 'CH', 'ENC'+pull.END]) + "\n"
 		if not phaser.verify_h_crack(target['bssid'])[0] or NEW_HAND == True:
 			if NEW_HAND:
 				d_carded__ = phaser.discard_p_hand(target['bssid'])
@@ -478,13 +488,13 @@ def main():
 				if pmk.asso_gen():
 					pmk.lets_crack()
 		else:
-			pull.error("Not vulnerable because it's not a WPA2 network.")
+			pull.special("This attach vector only works for WPA2 networks")
 			sys.exit(0)
 
 if __name__ == "__main__":
 	pull = Pully()
 	pull.logo()
 	if not 'linux' in sys.platform:
-		pull.error("Not Supportable Operating System!")
+		pull.special("Not Supportable Operating System!")
 		sys.exit(1)
 	main()

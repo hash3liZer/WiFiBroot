@@ -123,6 +123,9 @@ class Pully:
 	def special(self, statement, *args, **kwargs):
 		print "%s[~]%s %s" % (self.BOLD+self.RED, self.END, statement)
 
+	def spacer(self, statement, *args, **kwargs):
+		print "    %s" % (statement)
+
 	def linebreak(self):
 		print "\n"
 		return

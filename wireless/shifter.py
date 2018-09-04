@@ -8,6 +8,7 @@ from scapy.sendrecv import sniff
 from scapy.config import conf
 from scapy.utils import PcapWriter
 from scapy.utils import rdpcap
+from utils import org
 import re
 try:
 	from scapy.layers.dot11 import EAPOL
@@ -156,7 +157,7 @@ class Shifter:
 				s_or_n = self.filtertify(bssid.lower(), layer_data__)
 				if s_or_n:
 					self.cells.append({'essid': layer_data__['essid'], 'bssid': bssid, 'channel': layer_data__['channel'], 'auth': layer_data__['auth'], \
-						'cipher': layer_data__['cipher'], 'psk': layer_data__['psk'], 'pwr': self.dBM_sig(pkt), 'beacon': pkt})
+						'cipher': layer_data__['cipher'], 'psk': layer_data__['psk'], 'pwr': self.dBM_sig(pkt), 'beacon': pkt, 'vendor': org(bssid).org})
 			else:
 				for ap in self.cells:
 					if ap['bssid'] == bssid:

@@ -15,12 +15,13 @@ class Display:
 
 	_count_ = 0
 
-	def __init__(self):
+	def __init__(self, verbosity):
 		self.screen = curses.initscr()
 		curses.noecho()
 		curses.cbreak()
 		self.screen.keypad(1)
 		self.screen.scrollok(True)
+		self.verbose = verbosity
 
 	def __del__(self):
 		self.screen.keypad(0)
@@ -46,8 +47,11 @@ class Display:
 		return ch
 
 	def Shifter(self, sniffer, iface_instance):
-		
-		__HEADERS = ['NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID']
+
+		if self.verbose:
+			__HEADERS = ['NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID', 'VENDOR']
+		else:
+			__HEADERS = ['NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID']
 
 		while not self.shifter_break:
 			tabulator__, __sig_LIST, self.__WiFiAP, __sig_FOUND = [], [], [], []
@@ -67,8 +71,12 @@ class Display:
 						self.__WiFiAP.append(ap)
 
 			for ap in self.__WiFiAP:
-				tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
-						ap['psk'], ap['channel'], ap['bssid'].upper()])
+				if self.verbose:
+					tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
+							ap['psk'], ap['channel'], ap['bssid'].upper(), ap['vendor']])
+				else:
+					tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
+							ap['psk'], ap['channel'], ap['bssid'].upper()])
 
 			self.screen.addstr(0, 0, "[%s] Channel [%s] Time Elapsed [%d] Networks Found"\
 									% (self.cch(iface_instance.cch), self.c_time(), len(tabulator__)))

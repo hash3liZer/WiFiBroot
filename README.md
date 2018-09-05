@@ -5,7 +5,7 @@ A tool for Cracking, testing and doing forensic activities on WiFi networks. Cra
 ## DESCRIPTION
 WiFiBroot is built to provide clients all-in-one facility for cracking WiFi (WPA/WPA2) networks. It heavily depends on **scapy**, a well-featured packet manipulation library in Python. Almost every process within is dependent somehow on scapy layers and other functions except for operating the wireless interface on a different channel. That will be done via native linux command **iwconfig** for which you maybe need *sudo* privileges. For the time, it provides two modes, one where it tries to capture handshake first and guess the password from the dictionary provided. The other mode uses PMKID to crack the same key. This one's faster and does not require any need for a handshake. Hashes like MIC, PMK and PTK can be seen as well by increasing the verbosity level. Currently, it provide two printing levels. One is normal one and the other is with **--verbose** option. The tool is still under development and the users who wanna take part in are very much welcome. 
 
-As of, it is built in Python, you may not be able to acheive the speed of C cracking programs. 
+As of, it is built in Python and surely, you may not be able to acheive the speed of C cracking programs but can compile the source code to acheive your very aim. 
 
 ## Installation: 
 
@@ -18,7 +18,7 @@ The script is supposed to be run under **sudo** but it will still work even if n
 
 ```
 $ sudo python wifibroot.py -i [interface] -d /path/to/dictionary -m [mode]
-```
+``` 
 
 ## Documentation : ##
 
@@ -26,7 +26,6 @@ Here, is the complete documentation for using wifibroot:
 
 ### Usage:
 
-Normal Usage: 
 ```
 $ sudo python wifibroot.py -i wlan1mon [options]
 ```
@@ -68,6 +67,8 @@ Cracking Mode (PMKID):
     Fast and more reliable. Works with WPA2 networks. 
 
     -m, --mode          Must be 2 in this case
+        --frames        Number of Auth and Association
+                        frames to send. 
 ```
 Under normal mode, it will print out a few important details and will print password if found. For research facilities, verbose mode will show you live packets as soon as they get captured and will print hexdump of computed hashes. The hashes will include, PMK (Pairwise Master Key), PTK (Pairwise Transient Key) and MIC (Message Integrity Code). An example given below: 
 

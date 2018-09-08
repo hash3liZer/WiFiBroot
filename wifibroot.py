@@ -166,7 +166,7 @@ class Sniffer:
 		del self.screen
 
 		if V__:
-			__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID', 'VENDOR'+pull.END]
+			__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID', 'VENDOR', 'CL'+pull.END]
 		else:
 			__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID'+pull.END]
 		tabulator__ = []
@@ -187,7 +187,7 @@ class Sniffer:
 		for ap in self.WiFiAP:
 			if V__:
 				tabulator__.append([ap['count'], pull.GREEN+ap['essid']+pull.END, ap['pwr'], ap['auth'], ap['cipher'], \
-						ap['psk'], ap['channel'], ap['bssid'].upper(), pull.DARKCYAN+ap['vendor']+pull.END ])
+						ap['psk'], ap['channel'], ap['bssid'].upper(), pull.DARKCYAN+ap['vendor']+pull.END, ap['clients'] ])
 			else:
 				tabulator__.append([ap['count'], pull.GREEN+ap['essid']+pull.END, ap['pwr'], ap['auth'], ap['cipher'], \
 						ap['psk'], ap['channel'], ap['bssid'].upper()])

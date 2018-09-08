@@ -49,7 +49,7 @@ class Display:
 	def Shifter(self, sniffer, iface_instance):
 
 		if self.verbose:
-			__HEADERS = ['NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID', 'VENDOR']
+			__HEADERS = ['NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID', 'VENDOR', 'CL']
 		else:
 			__HEADERS = ['NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID']
 
@@ -73,7 +73,7 @@ class Display:
 			for ap in self.__WiFiAP:
 				if self.verbose:
 					tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
-							ap['psk'], ap['channel'], ap['bssid'].upper(), ap['vendor']])
+							ap['psk'], ap['channel'], ap['bssid'].upper(), ap['vendor'], ap['clients']])
 				else:
 					tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
 							ap['psk'], ap['channel'], ap['bssid'].upper()])
@@ -94,4 +94,5 @@ class Display:
 			return get_terminal_size().columns
 		except:
 			return None
+
 

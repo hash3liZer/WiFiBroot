@@ -18,6 +18,7 @@ except ImportError:
 class Shifter:
 
 	bss_counter = []
+	clients = []
 	cells = []
 	p_BEACON = 0
 
@@ -146,7 +147,26 @@ class Shifter:
 		else:
 			return bool(1)
 
-	def ssid_shift(self, pkt):
+	def clients_garbage(self, pkt):
+		if pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == 2L and not pkt.haslayer(EAPOL):
+			_sn = pkt.getlayer(Dot11).addr2
+			_rc = pkt.getlayer(Dot11).addr1
+
+			_tgt = None
+
+			if _sn in self.bss_counter:
+				_tgt, _ap = _rc, _sn
+			elif _rc in self.bss_counter:
+				_tgt, _ap = _sn, _rc
+
+			if _tgt and _tgt not in self.clients:
+				for cell in self.cells:
+					for _key, _val in cell.items():
+						if _key == 'bssid' and _val == _ap:
+							cell['clients'] += 1
+							self.clients.append(_tgt)
+
+	def beac_shift(self, pkt):
 		if pkt.haslayer(Dot11Beacon):
 			bssid = pkt.getlayer(Dot11).addr2
 			cap = pkt.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}").split('+')
@@ -157,11 +177,16 @@ class Shifter:
 				s_or_n = self.filtertify(bssid.lower(), layer_data__)
 				if s_or_n:
 					self.cells.append({'essid': layer_data__['essid'], 'bssid': bssid, 'channel': layer_data__['channel'], 'auth': layer_data__['auth'], \
-						'cipher': layer_data__['cipher'], 'psk': layer_data__['psk'], 'pwr': self.dBM_sig(pkt), 'beacon': pkt, 'vendor': org(bssid).org})
+						'cipher': layer_data__['cipher'], 'psk': layer_data__['psk'], 'pwr': self.dBM_sig(pkt), 'beacon': pkt, 'vendor': org(bssid).org, 'clients': 0})
 			else:
 				for ap in self.cells:
 					if ap['bssid'] == bssid:
 						ap['pwr'] = self.dBM_sig(pkt)
+
+
+	def ssid_shift(self, pkt):
+		self.beac_shift(pkt)
+		self.clients_garbage(pkt)
 
 	def results(self):
 		return self.cells
@@ -169,5 +194,6 @@ class Shifter:
 	def run(self):
 		try:
 			pkts = sniff(iface=self.iface, prn=self.ssid_shift)
-		except Exception, e:
+		except Exception:
 			pass
+

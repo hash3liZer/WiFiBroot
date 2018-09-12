@@ -202,10 +202,18 @@ class PMKID:
 			fMIC = "00000000000000000000000000000000"
 			if sn == self.ap.replace(':', '') and nonce != fNONCE and mic == fMIC:
 				self.__ASSO_STEP = True
-				self.pull.up("EAPOL %s %s>%s %s %s[1 of 4]%s" % (self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
-															 self.pull.BOLD+self.pull.GREEN, self.pull.END) )
 				if self.verbose:
-					self.pull.info("Successfull handshake initiated [%s]" % org(self.ap).org)
+					self.pull.info("EAPOL %s (%s) %s>%s %s (%s) %s[Initiated]%s" % (self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END , self.pull.RED, self.pull.END,\
+																			self.cl.replace(':', '').upper(), \
+																			self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.YELLOW, self.pull.END))
+					self.pull.up("EAPOL %s (%s) %s>%s %s (%s) %s[1 of 4]%s" % (self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END,\
+															 self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+															 self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.GREEN, self.pull.END) )
+				else:
+					self.pull.info("EAPOL %s %s>%s %s %s[Initiated]%s" % (self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(), \
+																			self.pull.YELLOW, self.pull.END))
+					self.pull.up("EAPOL %s %s>%s %s %s[1 of 4]%s" % (self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
+															 self.pull.BOLD+self.pull.GREEN, self.pull.END) )
 				self.__EAPOL = pkt
 				raise ValueError
 
@@ -260,7 +268,11 @@ class PMKID:
 		fPMKID = '00000000000000000000000000000000'
 		PMKID = binascii.hexlify(self.__EAPOL.getlayer(Raw).load)[202:234]
 		if PMKID != fPMKID and PMKID != '':
-			self.pull.up("PMKID Located (%s)" % PMKID)
+			self.pull.special("Vulnerable to PMKID Attack!")
+			if self.verbose:
+				self.pull.up("PMKID %s (%s) [%s]" % (self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.RED+PMKID+self.pull.END))
+			else:
+				self.pull.up("PMKID %s [%s]" % (self.ap.replace(':', '').upper(), PMKID))
 			_pmk = self.crack_the_pmk(PMKID)
 			return _pmk
 		else:

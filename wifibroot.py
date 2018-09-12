@@ -102,13 +102,10 @@ class interface:
 
 	def put_channel(self, ch):
 		os.system('iwconfig %s channel %s' % (self.iface, ch))
-		if V__:
-			pull.info('Operating on channel: %s' % ch)
 		self.cch = int(ch)
 		return ch
 
 	def hopper(self):
-		pull.up('Starting Channel Hopping. Channel will couple time every second')
 		#if subprocess.call(['sudo','iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.PIPE) != 0:
 		#	pull.error('iwconfig not found. Make sure it is installed and you have neccassery privileges')
 		#	sys.exit(-1)
@@ -150,7 +147,7 @@ class Sniffer:
 		self.aps()
 
 	def aps(self):
-		pull.up('Scanning through the Area. Press [%sCTRL+C%s] to Stop. ' % (pull.BOLD, pull.END))
+		pull.up('Scanning! Press [CTRL+C] to stop.')
 		time.sleep(1)
 		self.screen = Display(V__)
 		thread = threading.Thread(target=self.screen.Shifter, args=(self.shift, self.iface1,), name="Verbose Sniffer")
@@ -422,6 +419,8 @@ def main():
 		sys.exit(-1)
 	else:
 		if os.path.isfile(options.dictionary):
+			_lns = open(options.dictionary).read().splitlines()
+			pull.info("Path: {%s} Lines {%s}" % (pull.BLUE+options.dictionary+pull.END, pull.BLUE+str(len(_lns))+pull.END))
 			DICTIONARY = options.dictionary
 		else:
 			pull.error('No such File: %s' % (options.dictionary))
@@ -439,13 +438,15 @@ def main():
 			pull.error(iface.check_help)
 			sys.exit(-1)
 		if options.channel == None:
+			pull.special("Channel Specified: %s Hopper Status [%s]" % (pull.RED+"NONE"+pull.END, pull.GREEN+"Running"+pull.END))
 			iface.hopper()
 		else:
 			__channels = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
 			if options.channel in __channels:
 				iface.put_channel(options.channel)
+				pull.info("Channel Specified: %s Hopper Status [%s]" % (pull.GREEN+str(options.channel)+pull.END, pull.GREEN+"Stopped"+pull.END))
 			else:
-				pull.error('Selected Channel is not a legal one. Please choose a valid one.')
+				pull.special('Invalid Channel Detected! Hopper Status [%s]' % (pull.GREEN+"Running"+pull.END))
 				iface.hopper()
 	else:
 		pull.error('Interface Required. Please supply -i argument.')
@@ -459,7 +460,6 @@ def main():
 		elif options.essid != None:
 			sniffer = Sniffer(iface, essid=options.essid)
 	else:
-		pull.info("No Network has been Specified. ")
 		sniffer = Sniffer(iface)
 
 	if options.mode == 1:

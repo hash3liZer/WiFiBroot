@@ -158,8 +158,9 @@ class PMKID:
 		try:
 			self.__ASSO_STATUS = True
 			sniff(iface=iface, prn=self.get_asso_resp)
-		except ValueError:
-			pass
+		except Exception, e:
+			if not e == "EAPOL":
+				sys.exit(e)
 		finally:
 			self.__ASSO_STATUS = False
 
@@ -174,7 +175,7 @@ class PMKID:
 													(self.cl.replace(':', '').upper(), self.pull.DARKCYAN+org(self.cl).org+self.pull.END, self.pull.RED, self.pull.END, self.ap.replace(':', '').upper(),\
 														self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.YELLOW, self.pull.END))
 					else:
-						self.pull.info("Received %s %s<%s %s %s[Association Response]%s" % (self.cl.replace(':', '').upper(), self.pull.RED, self.pull.END, self.pull.RED, self.pull.END,\
+						self.pull.info("Received %s %s<%s %s %s[Association Response]%s" % (self.cl.replace(':', '').upper(), self.pull.RED, self.pull.END,\
 													 self.ap.replace(':', '').upper(), self.pull.YELLOW, self.pull.END))
 
 					if not self.__M_PLACED:
@@ -215,7 +216,7 @@ class PMKID:
 					self.pull.up("EAPOL %s %s>%s %s %s[1 of 4]%s" % (self.ap.replace(':', '').upper(), self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(),\
 															 self.pull.BOLD+self.pull.GREEN, self.pull.END) )
 				self.__EAPOL = pkt
-				raise ValueError
+				raise ValueError("EAPOL")
 
 	def asso_conn(self):
 		if not self.__ASSO_STATUS:
@@ -272,7 +273,7 @@ class PMKID:
 			if self.verbose:
 				self.pull.up("PMKID %s (%s) [%s]" % (self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.RED+PMKID+self.pull.END))
 			else:
-				self.pull.up("PMKID %s [%s]" % (self.ap.replace(':', '').upper(), PMKID))
+				self.pull.up("PMKID %s [%s]" % (self.ap.replace(':', '').upper(), self.pull.RED+PMKID+self.pull.END))
 			_pmk = self.crack_the_pmk(PMKID)
 			return _pmk
 		else:

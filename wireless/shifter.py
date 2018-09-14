@@ -22,6 +22,7 @@ class Shifter:
 	cells = []
 	p_BEACON = 0
 	__ALSA_CLIENTS = {}
+	__BLACKLIST = ('ffffffffffff')
 
 	def __init__(self, iface, bss, ess, verbose):
 		self.iface = iface
@@ -164,8 +165,9 @@ class Shifter:
 				for cell in self.cells:
 					for _key, _val in cell.items():
 						if _key == 'bssid' and _val == _ap:
-							cell['clients'] += 1; self.clients.append(_tgt)
-							self.__ALSA_CLIENTS[_val].append(_tgt)
+							if not (_tgt.replace(':','').lower() in self.__BLACKLIST):
+								cell['clients'] += 1; self.clients.append(_tgt)
+								self.__ALSA_CLIENTS[_val].append( (_tgt, self.dBM_sig(pkt)) )
 
 	def beac_shift(self, pkt):
 		if pkt.haslayer(Dot11Beacon):

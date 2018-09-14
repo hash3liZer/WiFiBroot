@@ -31,3 +31,12 @@ class org:
 		while _to_return == last_num:
 			_to_return = random.randint(1, _max)
 		return _to_return
+
+class Modes:
+
+	def get_mode(self, m):
+		avail_modes = (1, 2)
+		if m in avail_modes:
+			return True
+		else:
+			return False

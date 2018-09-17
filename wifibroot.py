@@ -223,7 +223,7 @@ class pmkid_GEN:
 		return _PACT
 
 	def lets_crack(self):
-		_pass, _hash, _hash_ = self.pmkid.crack()
+		_pass, _hash, _hash_ = self.pmkid.crack( WRITE__ )
 		if _pass is None:
 			pull.error("Password Not Found in Dictionary. Try enlarging it!")
 			sys.exit()

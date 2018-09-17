@@ -265,7 +265,16 @@ class PMKID:
 		else:
 			return c_pass
 
-	def crack(self):
+	def save(self, _write, PMKID):
+		if bool(_write):
+			_file = open(_write, 'w')
+			_file.write( str(PMKID) +"*"+ str(self.ap.replace(':', '')).lower() +"*"+ str(self.cl.replace(':', '')).lower() +"*"+ str(binascii.hexlify(self.essid)) +"\n" )
+			_file.close()
+			self.pull.use('PMKID -> %s[%s]%s %s[Saved]%s' % (self.pull.RED, _write, self.pull.END, self.pull.GREEN, self.pull.END))
+		else:
+			self.pull.error("PMKID not saved. Provide -w, --write option to save the capture. ")
+
+	def crack(self, _write):
 		fPMKID = '00000000000000000000000000000000'
 		PMKID = binascii.hexlify(self.__EAPOL.getlayer(Raw).load)[202:234]
 		if PMKID != fPMKID and PMKID != '':
@@ -274,6 +283,9 @@ class PMKID:
 				self.pull.up("PMKID %s (%s) [%s]" % (self.ap.replace(':', '').upper(), self.pull.DARKCYAN+org(self.ap).org+self.pull.END, self.pull.RED+PMKID+self.pull.END))
 			else:
 				self.pull.up("PMKID %s [%s]" % (self.ap.replace(':', '').upper(), self.pull.RED+PMKID+self.pull.END))
+
+			self.save(_write, PMKID)
+
 			_pmk = self.crack_the_pmk(PMKID)
 			return _pmk
 		else:

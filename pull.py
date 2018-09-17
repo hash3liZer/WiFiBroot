@@ -31,6 +31,7 @@ General:
                         instead of dictionary
     -d, --dictionary    Use this dictionary instead of
                         default one.
+    -w, --write         Write Captured Data to a File
 
 Filters: 
     -e, --essid         ESSID of listening network

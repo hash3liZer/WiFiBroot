@@ -25,13 +25,15 @@ All Options:
     -v, --verbose       Verbose Mode. Print hashes too. 
     -t, --timeout       Timeout for clients detection.
                         Default: 15
-        --deauth        Number of deauthentication packets
-                        to send. Default: 32
     -p, --passwords     Comma Seperated list of passwords
                         instead of dictionary
     -d, --dictionary    Use this dictionary instead of
                         default one.
     -w, --write         Write Captured Data to a File
+        --deauth        Number of deauthentication packets
+                        to send. Default: 32
+        --handshake     Handshake to use instead of
+                        performing dissociation
 
 Filters: 
     -e, --essid         ESSID of listening network
@@ -46,6 +48,8 @@ Filters:
                         packets
             --deauth    Number of deauthentication packets
                         to send
+            --handshake     Handshake to use instead of
+                        performing dissociation
         -w, --write     Write handshake to a file
 
     [Mode 2]

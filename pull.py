@@ -12,19 +12,19 @@ __log__ = r'''%s
           %sv1.0. Coded by @hash3liZer.%s
 '''
 
-__help__ = r'''
-General:
+__help__ ='''
+WiFi Modes:
+    #     Description                                 Value
+   01     Capture 4-way handshake and crack MIC code    1
+   02     Capture and Crack PMKID                       2
+
+All Options:
     -h, --help          Show this help Manual. 
     -i, --interface     Monitor Interface to use
-    -m, --mode          WiFiBroot mode, Default: 1
-                        See below information.      
+    -m, --mode          Mode to use, see the list available    
     -v, --verbose       Verbose Mode. Print hashes too. 
     -t, --timeout       Timeout for clients detection.
-                        Default: 20
-        --nowrite       Do not save the handshake after
-                        it is captured
-        --newhandshake  Capture new handshake discard 
-                        previous one
+                        Default: 15
         --deauth        Number of deauthentication packets
                         to send. Default: 32
     -p, --passwords     Comma Seperated list of passwords
@@ -39,20 +39,21 @@ Filters:
     -c, --channel       Channel interface should be listening
                         on. Default: ALL
 
-Handshake Mode (4 EAPOLS):
-    This mode requires to first capture the handshake 
-    and then accordingly crack the hash. 
+[Mode Specific Options]
+    [Mode 1]
+        -m, --mode      Value: 1
+        -t, --timeout   Timeout for gap between deauthentication
+                        packets
+            --deauth    Number of deauthentication packets
+                        to send
+        -w, --write     Write handshake to a file
 
-    -m, --mode          Must be 1 in this case
-
-Cracking Mode (PMKID):
-    This Mode does not require handshake to be captured. 
-    Fast and more reliable. Works with WPA2 networks. 
-
-    -m, --mode          Must be 2 in this case
-        --frames        No of Auth and Association frames
-                        to send. 
+    [Mode 2]
+        -m, --mode      Value: 2
+        -w, --write     Write pmkid capture in a seperate file.
+                        Can then be used with hashcat
 '''
+
 
 class Pully:
 

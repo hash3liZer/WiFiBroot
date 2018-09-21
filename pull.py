@@ -115,7 +115,7 @@ class Pully:
 		return
 
 	def use(self, statement, *args, **kwargs):
-		print "%s[$]%s %s" % (self.BOLD+self.GREEN, self.END, statement)
+		print "%s[+]%s %s" % (self.BOLD+self.GREEN, self.END, statement)
 		return
 
 	def question(self, statement, *args, **kwargs):

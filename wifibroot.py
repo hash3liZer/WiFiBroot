@@ -329,6 +329,7 @@ class Moder:
 		self._sniff = _sniff
 
 	def hand_mode_ext(self, _tgt, _ph):
+		pull.up("Verifying... Looking for %s[4 EAPOLs]%s" % (pull.BLUE, pull.END))
 		_eap = eAPoL(_tgt['bssid'])
 		_pkts = rdpcap(_HANDSHAKE); _valid = False
 
@@ -366,57 +367,36 @@ class Moder:
 			pull.special("The specified mode can only be used for WPA/WPA2 Networks")
 			sys.exit(-1)
 
+##########################
+#    DIRECT FUNCTIONS
+##########################
+
 def grace_exit(sig, frame):
 	pull.special("Closing. Cleaning up the mess! ")
 	time.sleep(1)
 	sys.exit(0)
 
-def main():
-	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_, _HANDSHAKE
-
-	parser = optparse.OptionParser(add_help_option=False)
-	parser.add_option('-h', '--help', dest='help', default=False, action="store_true", help="Show this help manual")
-	parser.add_option('-m', '--mode', dest='mode', type='int', help="Mode to Use. ")
-	parser.add_option('-i', '--interface', dest="interface", type='string', help="Monitor Wireless Interface to use")
-	parser.add_option('-e', '--essid', dest="essid", type='string', help="Targets AP's with the specified ESSIDs")
-	parser.add_option('-b', '--bssid', dest="bssid", type='string', help="Targets AP's with the specified BSSIDs")
-	parser.add_option('-c', '--channel', dest="channel", type='int', help="Listen on specified channel.")
-	parser.add_option('-p', '--passwords', dest="password", type='string', help="Check the AP against provided WPA Key Passphrases, seperated by comma.")
-	parser.add_option('-d', '--dictionary', dest='dictionary', type='string', help="Dictionary containing Passwords")
-	parser.add_option('-w', '--write', dest='write', type='string', help="Write Data to a file. ")
-	parser.add_option('--handshake', dest='handshake',type='string', help='Handshake to use, instead of dissociating')
-	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send.")
-	parser.add_option('', '--frames', dest='frames', type='int', default=0, help="Number of Auth and Association Frames")
-	parser.add_option('-t', '--timeout', dest="timeout", default=15, type='int', help="Specify timeout for locating target clients. ")
-	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
-	
-	(options, args) = parser.parse_args()
-
-	if options.help == True:
-		pull.help()
-		sys.exit(0)
-
-	if options.password != None:
-		_KEY_ = options.password
-
-	if not Modes().get_mode(options.mode):
-		pull.special("No Mode Specified! Please supply -m, --mode option.")
-		sys.exit(-1)
-
+def _writer(options):
 	if options.write != None:
 		if os.path.isfile(options.write):
 			pull.special("File Already Exists! %s[%s]%s" % (pull.RED, options.write, pull.END))
 			sys.exit(-1)
 		else:
-			WRITE__ = options.write
+			return options.write
+	else:
+		return str()
 
+def _handshake(options):
 	if options.handshake != None:
 		if os.path.isfile(options.handshake):
-			_HANDSHAKE = options.handshake
+			return options.handshake
 		else:
 			pull.error("No such File %s[%s]%s" % (pull.RED, options.handshake, pull.END))
 			sys.exit(-1)
+	else:
+		return str()
 
+def _wordlister(options):
 	if options.dictionary == None:
 		pull.error("No dictionary was provided. Use -h or --help for more information. ")
 		sys.exit(-1)
@@ -424,14 +404,12 @@ def main():
 		if os.path.isfile(options.dictionary):
 			_lns = open(options.dictionary).read().splitlines()
 			pull.info("Path: {%s} Lines {%s}" % (pull.BLUE+options.dictionary+pull.END, pull.BLUE+str(len(_lns))+pull.END))
-			DICTIONARY = options.dictionary
+			return options.dictionary
 		else:
 			pull.error('No such File: %s' % (options.dictionary))
 			sys.exit(-1)
 
-	if options.verbose == True:
-		V__ = bool(1)
-
+def _channeler(options):
 	if options.interface != None:
 		iface = interface(options.interface)
 		if iface.check_mon == False:
@@ -448,10 +426,12 @@ def main():
 			else:
 				pull.special('Invalid Channel Detected! Hopper Status [%s]' % (pull.GREEN+"Running"+pull.END))
 				iface.hopper()
+		return iface
 	else:
 		pull.error('Interface Required. Please supply -i argument.')
 		sys.exit(-1)
 
+def _silfer(iface, options):
 	if options.essid != None or options.bssid != None:
 		if options.essid != None and options.bssid != None:
 			sniffer = Sniffer(iface, options.bssid, options.essid)
@@ -462,13 +442,51 @@ def main():
 	else:
 		sniffer = Sniffer(iface)
 
+	return sniffer
+
+def main():
+	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_, _HANDSHAKE
+	global _CRACK
+
+	parser = optparse.OptionParser(add_help_option=False)
+	parser.add_option('-h', '--help', dest='help', default=False, action="store_true", help="Show this help manual")
+	parser.add_option('-m', '--mode', dest='mode', type='int', help="Mode to Use. ")
+	parser.add_option('-i', '--interface', dest="interface", type='string', help="Monitor Wireless Interface to use")
+	parser.add_option('-e', '--essid', dest="essid", type='string', help="Targets AP's with the specified ESSIDs")
+	parser.add_option('-b', '--bssid', dest="bssid", type='string', help="Targets AP's with the specified BSSIDs")
+	parser.add_option('-c', '--channel', dest="channel", type='int', help="Listen on specified channel.")
+	parser.add_option('-d', '--dictionary', dest='dictionary', type='string', help="Dictionary containing Passwords")
+	parser.add_option('-w', '--write', dest='write', type='string', help="Write Data to a file. ")
+	parser.add_option('', '--handshake', dest='handshake',type='string', help='Handshake to use, instead of dissociating')
+	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send.")
+	parser.add_option('', '--frames', dest='frames', type='int', default=0, help="Number of Auth and Association Frames")
+	parser.add_option('-t', '--timeout', dest="timeout", default=15, type='int', help="Specify timeout for locating target clients. ")
+	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
+	
+	(options, args) = parser.parse_args()
+
+	if options.help == True:
+		pull.help()
+		sys.exit(0)
+
+	if options.verbose == True:
+		V__ = bool(1)
+
+	if not Modes().get_mode(options.mode):
+		pull.special("No Mode Specified! Please supply -m, --mode option.")
+		sys.exit(-1)
+
 	if options.mode == 1:
-		phaser = Phazer(sniffer); _tgt = phaser.get_input(); signal(SIGINT, grace_exit)
-		_modler = Moder(options.mode, sniffer, iface)
+		WRITE__ = _writer(options); _HANDSHAKE = _handshake(options); DICTIONARY = _wordlister(options)
+		iface = _channeler(options); _silf = _silfer(iface, options)
+		phaser = Phazer(_silf); _tgt = phaser.get_input(); signal(SIGINT, grace_exit)
+		_modler = Moder(options.mode, _silf, iface)
 		_modler.hand_mode(phaser, _tgt, options.timeout, options.deauth)
 
 	elif options.mode == 2:
-		pmk = pmkid_GEN(iface, Phazer(sniffer).get_input(), options.frames)
+		WRITE__ = _writer(options); DICTIONARY = _wordlister(options)
+		iface = _channeler(options); _silf = _silfer(iface, options)
+		pmk = pmkid_GEN(iface, Phazer(_silf).get_input(), options.frames)
 		signal(SIGINT, grace_exit)
 		if pmk.is_version2():
 			if pmk.auth_gen():

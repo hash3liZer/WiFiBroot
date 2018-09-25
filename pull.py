@@ -88,6 +88,13 @@ Options:
    -r, --read         Captured file to crack             YES
 '''
 
+__list__='''
+Types: 
+    #         Type            Value
+    1         HANDSHAKE       handshake
+    2         PMKID           pmkid
+'''
+
 
 class Pully:
 
@@ -189,3 +196,6 @@ class Pully:
 
 	def modes(self):
 		print __mode__
+
+	def listTypes(self):
+		print __list__

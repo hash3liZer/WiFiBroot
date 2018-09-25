@@ -547,6 +547,8 @@ def main():
 	elif options.mode == 3:
 		if options.help:
 			pull.help(3); sys.exit(0)
+		if options.listTypes:
+			pull.listTypes(); sys.exit(0)
 		_type = _typer(options); DICTIONARY = _wordlister(options); _file = _crack_filer(options)
 		_modler = Moder(options.mode)
 		_modler.crack_mode(_type, _file, options.essid)

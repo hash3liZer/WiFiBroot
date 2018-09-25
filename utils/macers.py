@@ -35,7 +35,7 @@ class org:
 class Modes:
 
 	def get_mode(self, m):
-		avail_modes = (1, 2)
+		avail_modes = (1, 2, 3)
 		if m in avail_modes:
 			return True
 		else:

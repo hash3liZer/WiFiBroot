@@ -12,50 +12,80 @@ __log__ = r'''%s
           %sv1.0. Coded by @hash3liZer.%s
 '''
 
-__help__ ='''
-WiFi Modes:
-    #     Description                                 Value
-   01     Capture 4-way handshake and crack MIC code    1
-   02     Capture and Crack PMKID                       2
+__mode__='''
+Syntax:
+    $ python wifibroot.py [--mode [modes]] [--options]
+    $ python wifibroot.py --mode 2 -i wlan1mon --verbose -d /path/to/list -w pmkid.txt
 
-All Options:
-    -h, --help          Show this help Manual. 
-    -i, --interface     Monitor Interface to use
-    -m, --mode          Mode to use, see the list available    
-    -v, --verbose       Verbose Mode. Print hashes too. 
-    -t, --timeout       Timeout for clients detection.
-                        Default: 15
-    -p, --passwords     Comma Seperated list of passwords
-                        instead of dictionary
-    -d, --dictionary    Use this dictionary instead of
-                        default one.
-    -w, --write         Write Captured Data to a File
-        --deauth        Number of deauthentication packets
-                        to send. Default: 32
-        --handshake     Handshake to use instead of
-                        performing dissociation
+Modes:
+    #     Description                                 Value
+    01    Capture 4-way handshake and crack MIC code    1
+    02    Captures and Crack PMKID (PMKID Attack)       2
+    03    Perform Manaul cracking on available
+          capture types. See --list-types               3
+
+Use -h, --help after -m, --mode to get help on modes.
+'''
+
+__1help__='''
+Mode: 
+   01      Capture 4-way handshake and crack MIC code    1
+
+Options:
+   Args               Description                      Required
+   -h, --help         Show this help manual              NO
+   -i, --interface    Monitor Interface to use           YES
+   -v, --verbose      Verbose Mode. Detail help          NO
+   -t, --timeout      Time Delay between two deauth
+                      requests.                          NO
+   -d, --dictionary   Dictionary for Cracking            YES
+   -w, --write        Write Captured handshake to
+                      a seperate file                    NO
+       --deauth       Number of Deauthentication
+                      frames to send                     NO 
 
 Filters: 
-    -e, --essid         ESSID of listening network
-    -b, --bssid         BSSID of target network.
-    -c, --channel       Channel interface should be listening
-                        on. Default: ALL
+   -e, --essid         ESSID of listening network
+   -b, --bssid         BSSID of target network.
+   -c, --channel       Channel interface should be listening
+                       on. Default: ALL
+'''
 
-[Mode Specific Options]
-    [Mode 1]
-        -m, --mode      Value: 1
-        -t, --timeout   Timeout for gap between deauthentication
-                        packets
-            --deauth    Number of deauthentication packets
-                        to send
-            --handshake     Handshake to use instead of
-                        performing dissociation
-        -w, --write     Write handshake to a file
+__2help__='''
+Mode: 
+   02      Captures and Crack PMKID (PMKID Attack)       1
 
-    [Mode 2]
-        -m, --mode      Value: 2
-        -w, --write     Write pmkid capture in a seperate file.
-                        Can then be used with hashcat
+Options:
+   Args               Description                      Required
+   -h, --help         Show this help manual              NO
+   -i, --interface    Monitor Interface to use           YES
+   -v, --verbose      Verbose Mode. Detail help          NO
+   -d, --dictionary   Dictionary for Cracking            YES
+   -w, --write        Write Captured handshake to
+                      a seperate file                    NO
+
+Filters: 
+   -e, --essid         ESSID of listening network
+   -b, --bssid         BSSID of target network.
+   -c, --channel       Channel interface should be listening
+                       on. Default: ALL
+'''
+
+__3help__='''
+Mode: 
+   03    Perform Manaul cracking on available capture
+         types. See --list-types                         3
+
+Options:
+   Args               Description                      Required 
+   -h, --help         Show this help manual              NO
+       --list-types   List available cracking types      NO
+       --type         Type of capture to crack           YES
+   -v, --verbose      Verbose Mode. Detail help          NO
+   -d, --dictionary   Dictionary for Cracking            YES
+   -e, --essid        ESSID of target network. 
+                      Only for HANDSHAKE Type            YES
+   -r, --read         Captured file to crack             YES
 '''
 
 
@@ -149,5 +179,13 @@ class Pully:
 	def logo(self):
 		print __log__ % (self.BOLD+self.random_picker(), self.END, self.BOLD, self.END)
 
-	def help(self):
-		print __help__
+	def help(self, _m):
+		if _m == 1:
+			print __1help__
+		elif _m == 2:
+			print __2help__
+		elif _m == 3:
+			print __3help__
+
+	def modes(self):
+		print __mode__

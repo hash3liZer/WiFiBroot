@@ -21,6 +21,8 @@ from wireless import Sniper
 from wireless import PSK
 from wireless import eAPoL
 from wireless import PMKID
+from wireless import CAPTURE_PMKID
+from wireless import CAPTURE_HAND
 from scapy.utils import rdpcap
 from scapy.utils import PcapWriter
 from utils import tabulate
@@ -323,7 +325,7 @@ class Phazer:
 
 class Moder:
 
-	def __init__(self, _n, _sniff, _int):
+	def __init__(self, _n, _sniff=None, _int=None):
 		self.mode = _n
 		self.interface_inst = _int
 		self._sniff = _sniff
@@ -367,6 +369,25 @@ class Moder:
 			pull.special("The specified mode can only be used for WPA/WPA2 Networks")
 			sys.exit(-1)
 
+	def crack_mode(self, _type, _file, _ess):
+		if _type == 1:
+			_capture = CAPTURE_HAND(pull, _file, DICTIONARY, _ess, V__)
+			if _capture.verify():
+				_capture.organize()
+				_capture.loop()
+			else:
+				pull.error("Invalid Capture! Are you sure this is the valid capture?")
+				sys.exit(-1)
+		elif _type == 2:
+			_capture = CAPTURE_PMKID(pull, _file, DICTIONARY, V__)
+			if _capture.verify():
+				_capture.organize()
+				_capture.loop()
+			else:
+				pull.error("Invalid Capture! Are you sure this is the valid capture?")
+				sys.exit(-1)
+			
+
 ##########################
 #    DIRECT FUNCTIONS
 ##########################
@@ -409,6 +430,17 @@ def _wordlister(options):
 			pull.error('No such File: %s' % (options.dictionary))
 			sys.exit(-1)
 
+def _typer(options):
+	if not options.type == None:
+		if options.type == 'handshake':
+			return 1
+		elif options.type == 'pmkid':
+			return 2
+		else:
+			pull.error('Unknown Captured type specifed. Use --list-types option to see the list.'); sys.exit(-1)
+	else:
+		pull.special("No Capture Type Specified. See the manual (-h, --help)"); sys.exit(-1)
+
 def _channeler(options):
 	if options.interface != None:
 		iface = interface(options.interface)
@@ -444,6 +476,16 @@ def _silfer(iface, options):
 
 	return sniffer
 
+def _crack_filer(options):
+	if options.read == None:
+		pull.special("Please Specify your capture path. See manual!"); sys.exit(-1)
+	else:
+		_file = options.read
+		if os.path.isfile(_file):
+			return _file
+		else:
+			pull.special("No Such File: %s[%s]%s" % (pull.RED, _file, pull.END)); sys.exit(-1)
+
 def main():
 	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_, _HANDSHAKE
 	global _CRACK
@@ -457,26 +499,31 @@ def main():
 	parser.add_option('-c', '--channel', dest="channel", type='int', help="Listen on specified channel.")
 	parser.add_option('-d', '--dictionary', dest='dictionary', type='string', help="Dictionary containing Passwords")
 	parser.add_option('-w', '--write', dest='write', type='string', help="Write Data to a file. ")
+	parser.add_option('-t', '--timeout', dest="timeout", default=15, type='int', help="Specify timeout for locating target clients. ")
+	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
 	parser.add_option('', '--handshake', dest='handshake',type='string', help='Handshake to use, instead of dissociating')
 	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send.")
 	parser.add_option('', '--frames', dest='frames', type='int', default=0, help="Number of Auth and Association Frames")
-	parser.add_option('-t', '--timeout', dest="timeout", default=15, type='int', help="Specify timeout for locating target clients. ")
-	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
+	parser.add_option('', '--type', dest='type', type='string', help="Type of Cracking")
+	parser.add_option('', '--list-types', dest='listTypes', default=False, action="store_true", help="List of Available types")
+	parser.add_option('-r', '--read', dest='read', type='string', help='Read capture in mode 3')
 	
 	(options, args) = parser.parse_args()
 
-	if options.help == True:
-		pull.help()
+	if options.help and not(options.mode):
+		pull.modes()
 		sys.exit(0)
 
 	if options.verbose == True:
 		V__ = bool(1)
 
 	if not Modes().get_mode(options.mode):
-		pull.special("No Mode Specified! Please supply -m, --mode option.")
+		pull.special("No Mode Specified! Use -h, --help option to see available modes.")
 		sys.exit(-1)
 
 	if options.mode == 1:
+		if options.help:
+			pull.help(1); sys.exit(0)
 		WRITE__ = _writer(options); _HANDSHAKE = _handshake(options); DICTIONARY = _wordlister(options)
 		iface = _channeler(options); _silf = _silfer(iface, options)
 		phaser = Phazer(_silf); _tgt = phaser.get_input(); signal(SIGINT, grace_exit)
@@ -484,6 +531,8 @@ def main():
 		_modler.hand_mode(phaser, _tgt, options.timeout, options.deauth)
 
 	elif options.mode == 2:
+		if options.help:
+			pull.help(2); sys.exit(0)
 		WRITE__ = _writer(options); DICTIONARY = _wordlister(options)
 		iface = _channeler(options); _silf = _silfer(iface, options)
 		pmk = pmkid_GEN(iface, Phazer(_silf).get_input(), options.frames)
@@ -495,6 +544,12 @@ def main():
 		else:
 			pull.special("This attack only works for WPA2 networks")
 			sys.exit(0)
+	elif options.mode == 3:
+		if options.help:
+			pull.help(3); sys.exit(0)
+		_type = _typer(options); DICTIONARY = _wordlister(options); _file = _crack_filer(options)
+		_modler = Moder(options.mode)
+		_modler.crack_mode(_type, _file, options.essid)
 
 if __name__ == "__main__":
 	pull = Pully()

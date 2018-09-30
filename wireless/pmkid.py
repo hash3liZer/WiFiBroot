@@ -313,7 +313,8 @@ class PMKID:
 			if _hash == _hash_:
 				return (_pass, self.hexdump(_pmk), self.hexdump(_hash_))
 			else:
-				self.pull.lineup()
+				if _pass != _pass_list[-1]:
+					self.pull.lineup()
 
 		return (None, '', '')
 

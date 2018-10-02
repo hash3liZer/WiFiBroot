@@ -179,8 +179,8 @@ class Shifter:
 				layer_data__ = self.enc_shift(cap, ELTLAYERS)
 				s_or_n = self.filtertify(bssid.lower(), layer_data__)
 				if s_or_n:
-					self.cells.append({'essid': layer_data__['essid'], 'bssid': bssid, 'channel': layer_data__['channel'], 'auth': layer_data__['auth'], \
-						'cipher': layer_data__['cipher'], 'psk': layer_data__['psk'], 'pwr': self.dBM_sig(pkt), 'beacon': pkt, 'vendor': org(bssid).org, 'clients': 0})
+					self.cells.append({'essid': unicode(layer_data__['essid']), 'bssid': unicode(bssid), 'channel': unicode(layer_data__['channel']), 'auth': unicode(layer_data__['auth']), \
+						'cipher': unicode(layer_data__['cipher']), 'psk': unicode(layer_data__['psk']), 'pwr': self.dBM_sig(pkt), 'beacon': pkt, 'vendor': unicode(org(bssid).org), 'clients': 0})
 					self.__ALSA_CLIENTS[bssid] = []
 			else:
 				for ap in self.cells:

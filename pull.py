@@ -104,7 +104,6 @@ Options:
                       unlimited frames                   YES
         --ap          Access Point MAC Address           NO
         --client      STA (Station) MAC Address          NO
-
 '''
 
 __list__='''

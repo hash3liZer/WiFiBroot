@@ -23,6 +23,8 @@ Modes:
     02    Captures and Crack PMKID (PMKID Attack)       2
     03    Perform Manaul cracking on available
           capture types. See --list-types               3
+    04    Deauthentication. Disconnect two stations
+          and jam the traffic.                          4 
 
 Use -h, --help after -m, --mode to get help on modes.
 '''
@@ -86,6 +88,23 @@ Options:
    -e, --essid        ESSID of target network. 
                       Only for HANDSHAKE Type            YES
    -r, --read         Captured file to crack             YES
+'''
+
+__4help__='''
+Mode:
+    04   Deauthentication. Disconnect two stations
+         and jam the traffic.                            4
+
+Options:
+    Args              Description                      Required
+    -h, --help        Show this help manual              NO
+    -i, --interface   Monitor Mode Interface to use      YES
+    -0, --count       Number of Deauthentication
+                      frames to send. '0' specifies
+                      unlimited frames                   YES
+        --ap          Access Point MAC Address           NO
+        --client      STA (Station) MAC Address          NO
+
 '''
 
 __list__='''
@@ -193,6 +212,8 @@ class Pully:
 			print __2help__
 		elif _m == 3:
 			print __3help__
+		elif _m == 4:
+			print __4help__
 
 	def modes(self):
 		print __mode__

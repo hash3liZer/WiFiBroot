@@ -5,3 +5,4 @@ from wireless.cracker import eAPoL
 from wireless.pmkid import PMKID
 from wireless.captures import CAPTURE_PMKID
 from wireless.captures import CAPTURE_HAND
+from wireless.connector import DEAUTH

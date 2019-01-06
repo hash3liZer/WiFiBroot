@@ -19,6 +19,7 @@ import threading
 import time
 import binascii
 import hmac
+import re
 import hashlib
 import string
 import sys
@@ -253,6 +254,16 @@ class PMKID:
 		list__.append(mac.replace(':', '').upper()[:8])
 		list__.append(mac.replace(':', '').lower()[4:])
 		list__.append(mac.replace(':', '').upper()[4:])
+		if re.search(r"[0-9]$", mac.replace(':', '').lower()[:8], re.I):
+			for n in range(0, 10):
+				if n != int(re.search(r"[0-9]$", mac.replace(':', '').lower()[:8], re.I).group()):
+					list__.append(mac.replace(':', '').lower()[:8][:-1] + str(n))
+					list__.append(mac.replace(':', '').upper()[:8][:-1] + str(n))
+		if re.search(r"[0-9]$", mac.replace(':', '').lower()[4:], re.I):
+			for n in range(0, 10):
+				if n != int(re.search(r"[0-9]$", mac.replace(':', '').lower()[4:], re.I).group()):
+					list__.append(mac.replace(':', '').lower()[4:][:-1] + str(n))
+					list__.append(mac.replace(':', '').upper()[4:][:-1] + str(n))
 		return list__
 
 	def printing_pass(self, p_pass, c_pass):

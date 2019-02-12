@@ -144,8 +144,6 @@ $ python wifibroot.py --mode 4 -i wlan1mon --ap [AP MAC] --client [STA MAC] --ve
 
 ## Support ##
 
-Website: [https://www.shelvoide.com](https://www.shellvoide.com)
-
-Twitter: [@hash3liZer](https://twitter.com/hash3liZer)
-
-Email: [admin@shellvoide.com](mailto://admin@shellvoide.com) 
+Website: [https://www.shelvoide.com](https://www.shellvoide.com)<br>
+Twitter: [@hash3liZer](https://twitter.com/hash3liZer)<br>
+Email: [admin@shellvoide.com](mailto://admin@shellvoide.com)

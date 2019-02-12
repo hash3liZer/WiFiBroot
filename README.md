@@ -7,10 +7,10 @@ WiFiBroot is built to provide clients all-in-one facility for cracking WiFi (WPA
 
 ## Installation: 
 
-WiFiBroot heavily depends on scapy. So, you would need scapy installed. Almost, every other library would likely be installed on your system. Make sure the version you install for scapy should be `>=2.4.0`. Previous versions are likely to throw some unknown errors.
+WiFiBroot heavily depends on scapy. So, you would need scapy installed. Almost, every other library would likely be installed on your system. Make sure the version you install for scapy should be `<=2.4.0`. Newer versions are likely to throw some unknown errors.
 
 ```
-$ sudo pip install scapy
+$ sudo pip install scapy==2.4.0
 ```
 The script is supposed to be run under **sudo** but it will still work even if not run under the root mode. The basic necessary arguments are: 
 

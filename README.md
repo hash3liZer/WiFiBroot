@@ -49,7 +49,7 @@ Options:
    Args               Description                      Required
    -h, --help         Show this help manual              NO
    -i, --interface    Monitor Interface to use           YES
-   -v, --verbose      Verbose Mode. Detail help          NO
+   -v, --verbose      Turn off Verbose mode.             NO
    -t, --timeout      Time Delay between two deauth
                       requests.                          NO
    -d, --dictionary   Dictionary for Cracking            YES
@@ -73,7 +73,7 @@ Options:
    Args               Description                      Required
    -h, --help         Show this help manual              NO
    -i, --interface    Monitor Interface to use           YES
-   -v, --verbose      Verbose Mode. Detail help          NO
+   -v, --verbose      Turn off Verbose mode.             NO
    -d, --dictionary   Dictionary for Cracking            YES
    -w, --write        Write Captured handshake to
                       a seperate file                    NO
@@ -95,7 +95,7 @@ Options:
    -h, --help         Show this help manual              NO
        --list-types   List available cracking types      NO
        --type         Type of capture to crack           YES
-   -v, --verbose      Verbose Mode. Detail help          NO
+   -v, --verbose      Turn off Verbose mode.             NO
    -d, --dictionary   Dictionary for Cracking            YES
    -e, --essid        ESSID of target network. 
                       Only for HANDSHAKE Type            YES

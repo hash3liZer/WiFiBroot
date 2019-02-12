@@ -166,6 +166,7 @@ class Sniffer:
 			pass
 		self.screen.clear()
 		del self.screen
+		signal( SIGINT, _HANDLER )
 
 		if V__:
 			__HEADERS = [pull.BOLD+'NO', 'ESSID', 'PWR', 'ENC', 'CIPHER', 'AUTH', 'CH', 'BSSID', 'VENDOR', 'CL'+pull.END]
@@ -533,7 +534,7 @@ def main():
 	parser.add_option('-d', '--dictionary', dest='dictionary', type='string', help="Dictionary containing Passwords")
 	parser.add_option('-w', '--write', dest='write', type='string', help="Write Data to a file. ")
 	parser.add_option('-t', '--timeout', dest="timeout", default=15, type='int', help="Specify timeout for locating target clients. ")
-	parser.add_option('-v', '--verbose', dest="verbose", default=False, action="store_true", help="Print hashes and verbose messages. ")
+	parser.add_option('-v', '--verbose', dest="verbose", default=True, action="store_true", help="Print hashes and verbose messages. ")
 	parser.add_option('', '--handshake', dest='handshake',type='string', help='Handshake to use, instead of dissociating')
 	parser.add_option('', '--deauth', dest='deauth', type='int', default=32, help="Deauth Packets to send.")
 	parser.add_option('', '--frames', dest='frames', type='int', default=0, help="Number of Auth and Association Frames")

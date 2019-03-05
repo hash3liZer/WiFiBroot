@@ -32,7 +32,7 @@ Modes:
     #     Description                                 Value
     01    Capture 4-way handshake and crack MIC code    1
     02    Captures and Crack PMKID (PMKID Attack)       2
-    03    Perform Manaul cracking on available
+    03    Perform Manual cracking on available
           capture types. See --list-types               3
     04    Deauthentication. Disconnect two stations
           and jam the traffic.                          4

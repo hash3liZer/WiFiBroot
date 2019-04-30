@@ -603,7 +603,4 @@ def main():
 if __name__ == "__main__":
 	pull = Pully()
 	pull.logo()
-	if not 'linux' in sys.platform:
-		pull.special("Not Supportable Operating System!")
-		sys.exit(1)
 	main()

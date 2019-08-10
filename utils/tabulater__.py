@@ -10,15 +10,23 @@ import re
 import math
 
 
+try:
+    file
+    _long_type = long
+    _text_type = unicode
+except NameError:
+    from io import IOBase as file
+    _long_type = int
+    _text_type = str
+
+
 if python_version_tuple()[0] < "3":
     from itertools import izip_longest
     from functools import partial
     _none_type = type(None)
     _bool_type = bool
     _int_type = int
-    _long_type = long
     _float_type = float
-    _text_type = unicode
     _binary_type = str
 
     def _is_file(f):

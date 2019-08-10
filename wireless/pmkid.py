@@ -24,6 +24,11 @@ import hashlib
 import string
 import sys
 
+try:
+	xrange
+except NameError:
+	xrange = range
+
 class PMKID:
 
 	__AUTH_STATUS = False
@@ -75,7 +80,7 @@ class PMKID:
 	def enumerate_asso_fields(self, pkt):
 		elts = pkt.getlayer(Dot11Elt)
 		__data, count = {}, 0
-			
+
 		try:
 			while isinstance(elts[count], Dot11Elt):
 				if elts[count].ID == 0 or elts[count].ID == 1 or elts[count].ID == 48 or elts[count].ID == 5 or elts[count].ID == 50 or elts[count].ID == 221:    #ESSID #Rates
@@ -138,7 +143,7 @@ class PMKID:
 		auth_catcher = threading.Thread(target=self.auth_sniffer, args=(self.iface,), name="Authentication Catcher")
 		auth_catcher.daemon = True
 		auth_catcher.start()
-		
+
 		while not self.__AUTH_STEP:
 			self._randn_(3)
 			if self.verbose:
@@ -159,7 +164,7 @@ class PMKID:
 		try:
 			self.__ASSO_STATUS = True
 			sniff(iface=iface, prn=self.get_asso_resp)
-		except Exception, e:
+		except Exception as e:
 			if not e == "EAPOL":
 				sys.exit(e)
 		finally:
@@ -335,4 +340,3 @@ class PMKID:
 		else:
 			self._randn = self._nframes
 		return
-		

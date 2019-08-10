@@ -38,9 +38,7 @@ else:
     _none_type = type(None)
     _bool_type = bool
     _int_type = int
-    _long_type = int
     _float_type = float
-    _text_type = str
     _binary_type = bytes
     basestring = str
 

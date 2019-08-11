@@ -1,3 +1,4 @@
+from __future__ import print_function
 # hash3lizer/wifibroot.py
 # Twitter: @hash3liZer
 # Website: https://www.shellvoide.com
@@ -194,7 +195,7 @@ class Sniffer:
 			else:
 				tabulator__.append([ap['count'], pull.GREEN+ap['essid']+pull.END, ap['pwr'], ap['auth'], ap['cipher'], \
 						ap['psk'], ap['channel'], ap['bssid'].upper()])
-		print "\n"+tabulate(tabulator__, headers=__HEADERS)+"\n"
+		print("\n"+tabulate(tabulator__, headers=__HEADERS)+"\n")
 		os.kill(os.getpid(), SIGINT)
 
 class pmkid_GEN:
@@ -235,9 +236,9 @@ class pmkid_GEN:
 			pull.use("Password Found: %s%s%s" % (pull.BOLD, _pass, pull.END))
 			if V__:
 				pull.right("PMKID: ")
-				print _hash_
+				print(_hash_)
 				pull.right("PMK: ")
-				print _hash
+				print(_hash)
 
 	def channel(self, _ch):
 		self.iface_instance.put_channel(_ch)
@@ -295,9 +296,9 @@ class Phazer:
 
 		if _pass:
 			pull.use("Found: %s" % (_pass))
-			pull.right("PMK: "); print _pmk
-			pull.right("PTK: "); print _ptk
-			pull.right("MIC: "); print _mic
+			pull.right("PMK: "); print(_pmk)
+			pull.right("PTK: "); print(_ptk)
+			pull.right("MIC: "); print(_mic)
 
 		else:
 			pull.error("Password not Found! Try enlarging your dictionary!")

@@ -14,6 +14,12 @@ try:
 	from scapy.layers.dot11 import EAPOL
 except ImportError:
 	from scapy.layers.eap import EAPOL
+try:
+	long
+	unicode
+except NameError:
+	long = int
+	unicode = str
 
 class Shifter:
 
@@ -135,22 +141,16 @@ class Shifter:
 
 	def filtertify(self, bssid, __data):
 		if self.bss != None and self.ess != None:
-			if self.bss == bssid and self.ess == __data['essid']:
-				return bool(1)
-			return bool(0)
+			return self.bss == bssid and self.ess == __data['essid']
 		elif self.bss != None:
-			if self.bss == bssid:
-				return bool(1)
-			return bol(0)
+			return self.bss == bssid
 		elif self.ess != None:
-			if self.ess == __data['essid']:
-				return bool(1)
-			return bool(0)
+			return self.ess == __data['essid']
 		else:
-			return bool(1)
+			return True
 
 	def clients_garbage(self, pkt):
-		if pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == 2L and not pkt.haslayer(EAPOL):
+		if pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == long(2) and not pkt.haslayer(EAPOL):
 			_sn = pkt.getlayer(Dot11).addr2
 			_rc = pkt.getlayer(Dot11).addr1
 

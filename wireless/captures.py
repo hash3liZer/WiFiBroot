@@ -21,7 +21,6 @@ import hmac
 import hashlib
 import string
 import sys
-import sha
 
 try:
 	xrange
@@ -163,7 +162,7 @@ class CAPTURE_HAND:
 		i    = 0
 		R    = ''
 		while i<=((blen*8+159)/160):
-			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),sha)
+			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),hashlib.sha1)
 			i+=1
 			R = R+hmacsha1.digest()
 		return R[:blen]

@@ -3,9 +3,9 @@ from scapy.sendrecv import sendp
 from scapy.config import conf
 from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import RadioTap
-from scapy.layers.dot11 import Raw
 from scapy.layers.dot11 import Dot11Deauth
 from scapy.layers.dot11 import Dot11Beacon
+from scapy.packet import Raw
 from utils import org
 import signal
 import sys

@@ -90,7 +90,7 @@ class interface:
 
 	def is_mon(self, iface):
 		co = subprocess.Popen(['iwconfig', iface], stdout=subprocess.PIPE)
-		data = co.communicate()[0]
+		data = co.communicate()[0].decode()
 		card = re.findall('Mode:[A-Za-z]+', data)[0]
 		if "Monitor" in card:
 			return True
@@ -99,7 +99,7 @@ class interface:
 
 	def is_man(self, iface):
 		co = subprocess.Popen(['iwconfig', iface], stdout=subprocess.PIPE)
-		data = co.communicate()[0]
+		data = co.communicate()[0].decode()
 		card = re.findall('Mode:[A-Za-z]+', data)[0]
 		if "Managed" in card:
 			return True

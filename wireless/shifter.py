@@ -196,8 +196,5 @@ class Shifter:
 		return self.cells
 
 	def run(self):
-		try:
-			pkts = sniff(iface=self.iface, prn=self.ssid_shift)
-		except Exception:
-			pass
+		pkts = sniff(iface=self.iface, prn=self.ssid_shift)
 

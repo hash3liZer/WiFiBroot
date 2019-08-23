@@ -1,7 +1,7 @@
 
 from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import Dot11Beacon
-from scapy.layers.dot11 import Raw
+from scapy.packet import Raw
 from pull import Pully
 from pbkdf2 import PBKDF2
 from screen import Display

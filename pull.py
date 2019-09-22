@@ -1,19 +1,12 @@
-
-import sys
 import os
+import sys
+import random
 
-__log__ = r'''
-                                                                  ___________
-    \\\\\/////\\\\\/////    |||||   ||||||          __*__  __*__ |___________|
-     \\\   //  \\    //  .  |     . |    |    __    /   \  /   \     |__|
-      \\\///    \\\///   |  ||||| | |||||| \//  \\ ||||||||||||||    |__|
-       \\//      \\//    |  |     | |    | ||      ||||||||||||||    |__|
-        \/       _\/_    |  |     | |||||| ||       \___/  \___/     |__|
-        ________/    \___________   ____________||  ||     _________________|
-                                 \_/              ||  ____|
-'''
 
-class Pully:
+__help__ = """Usage:
+"""
+
+class PULL:
 
 	WHITE = '\033[0m'
 	PURPLE = '\033[95m'
@@ -28,6 +21,36 @@ class Pully:
 	END = '\033[0m'
 	LINEUP = '\033[F'
 
+	MIXTURE = {
+		'WHITE': '\033[0m',
+		'PURPLE': '\033[95m',
+		'CYAN': '\033[96m',
+		'DARKCYAN': '\033[36m',
+		'BLUE': '\033[94m',
+		'GREEN': '\033[92m',
+		'YELLOW': '\033[93m',
+		'RED': '\033[91m',
+		'BOLD': '\033[1m',
+		'UNDERLINE': '\033[4m',
+		'END': '\033[0m',
+		'LINEUP': '\033[F'
+	}
+
+	VACANT = {
+		'WHITE': '',
+		'PURPLE': '',
+		'CYAN': '',
+		'DARKCYAN': '',
+		'BLUE': '',
+		'GREEN': '',
+		'YELLOW': '',
+		'RED': '',
+		'BOLD': '',
+		'UNDERLINE': '',
+		'END': '',
+		'LINEUP': ''
+	}
+
 	def __init__(self):
 		if not self.support_colors:
 			self.win_colors()
@@ -41,7 +64,6 @@ class Pully:
 			return False
 		return True
 
-
 	def win_colors(self):
 		self.WHITE = ''
 		self.PURPLE = ''
@@ -54,41 +76,116 @@ class Pully:
 		self.BOLD = ''
 		self.UNDERLINE = ''
 		self.END = ''
-		self.LINEUP = ''
+		self.MIXTURE = {
+			'WHITE': '',
+			'PURPLE': '',
+			'CYAN': '',
+			'DARKCYAN': '',
+			'BLUE': '',
+			'GREEN': '',
+			'YELLOW': '',
+			'RED': '',
+			'BOLD': '',
+			'UNDERLINE': '',
+			'END': '',
+			'LINEUP': ''
+		}
 
-	def info(self, statement, *args, **kwargs):
-		print "%s[*]%s %s" % (self.YELLOW, self.END, statement)
-		return
+		for key in list(self.MIXTURE.items()):
+			self.MIXTURE[ key ] = ''
 
-	def error(self, statement, *args, **kwargs):
-		print "%s[!]%s %s" % (self.RED, self.END, statement)
-		return
+	def linebreak(self, howmany=1):
+		for n in range(0, howmany):
+			sys.stdout.write( "\n" )
 
-	def up(self, statement, *args, **kwargs):
-		print "%s[^]%s %s" % (self.BLUE, self.END, statement)
-		return
+	def print(self, sig, statement, *colors):
+		cc = ''
+		cc = "".join([color for color in colors])
+		print("{mix}[{sig}]{end} {statement}".format(
+				sig=sig,
+				mix=cc,
+				end=self.END,
+				statement=statement
+			))
 
-	def use(self, statement, *args, **kwargs):
-		print "%s[$]%s %s" % (self.GREEN, self.END, statement)
-		return
+	def verbose(self, sig, statement, verbose, *colors):
+		if verbose:
+			cc = ''
+			cc = "".join([color for color in colors])
+			print("{mix}[{sig}]{end} {statement}".format(
+					sig=sig,
+					mix=cc,
+					end=self.END,
+					statement=statement
+				))
 
-	def question(self, statement, *args, **kwargs):
-		q = raw_input("%s[?]%s %s" % (self.PURPLE, self.END, statement))
-		return q
+	def input(self, sig, statement, validation=(), *colors):
+		cc = ''
+		cc = "".join([color for color in colors])
+		value = input("{mix}[{sig}]{end} {statement}".format(
+					sig=sig,
+					mix=cc,
+					end=self.END,
+					statement=statement
+				))
+		if value:
+			if validation:
+				if validation[0].lower() == value.lower():
+					return True
+				elif validation[1].lower() == value.lower():
+					return False
+				else:
+					self.print("!", "Something Not Valid here. Enter a Valid Value.", self.RED)
+					value = self.input(sig, statement, validation, cc)
+			else:
+				return value
+		else:
+			self.print("!", "Something Not Valid here. Enter a Valid Value.", self.RED)
+			value = self.input(statement, validation, cc)			
 
-	def delete(self, statement, *args, **kwargs):
-		print "%s[#]%s %s" % (self.CYAN, self.END, statement)
-		return
+		return value
 
-	def linebreak(self):
-		print "\n"
-		return
+	def halt(self, statement, exit, *colors):
+		cc = ''
+		cc = "".join([color for color in colors])
+		print("{mix}[~]{end} {statement}".format(
+				mix=cc,
+				end=self.END,
+				statement=statement
+			))
+		if exit:
+			sys.exit(-1)
 
-	def right(self, statement, *args, **kwargs):
-		print "%s[>]%s %s" % (self.DARKCYAN, self.END, statement)
+	def get_mac(self, bss):
+		retval = ''
 
-	def lineup(self, *args, **kwargs):
-		sys.stdout.write(self.LINEUP)
+		if os.path.isfile(os.path.join(os.getcwd(), 'maclist', 'macs.txt')):
+			lines = open(os.path.join(os.getcwd(), 'maclist', 'macs.txt'))
+			for line in lines:
+				line = line.split( " ~ " )
+				if bss.lower().startswith(line[0].lower()[:8]):
+					retval = line[1].split(" ")[0]
+
+		return retval
+
+	def help(self):
+		sys.exit(
+				__help__
+			)
 
 	def logo(self):
-		print __log__
+		color = random.choice([
+				self.DARKCYAN,
+				self.RED,
+				self.YELLOW,
+			])
+		print(
+			"{mcolor}{bcolor}{body}{ecolor}\n\t\t{amcolor}@hash3liZer v1.0{aecolor}\n".format(
+					mcolor=color,
+					bcolor=self.BOLD,
+					body=__logo__,
+					ecolor=self.END,
+					amcolor=self.BOLD,
+					aecolor=self.END
+				)
+			)

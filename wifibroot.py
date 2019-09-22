@@ -6,6 +6,60 @@ import sys
 import argparse
 import subprocess
 from pull import PULL
+from wireless import SNIFFER
+
+class SLAB_A:
+
+	def __init__(self, prs):
+		self.interface = prs.interface
+		self.channels  = prs.channels
+		self.essids    = prs.essids
+		self.aps       = prs.aps
+		self.stations  = prs.stations
+		self.filters   = prs.filters
+		self.output    = prs.output
+
+	def sniff(self):
+		sniffer = SNIFFER(
+			self.interface,
+			self.channels,
+			self.essids,
+			self.aps,
+			self.stations,
+			self.filters,
+		)
+
+		sniffer.sniff()
+
+	def engage(self):
+		pull.print(
+			"*",
+			"IFACE: [{iface}] CHANNELS [{channels}] OPUT [{output}]".format(
+				iface=pull.DARKCYAN+self.interface+pull.END,
+				channels=pull.DARKCYAN+str(len(self.channels))+pull.END,
+				output=pull.DARKCYAN+"YES"+pull.END
+			),
+			pull.YELLOW
+		)
+		pull.print(
+			"^",
+			"Starting Sniffer. Press CTRL+C to Stop",
+			pull.GREEN
+		)
+
+		self.sniff()
+
+
+class HANDLER:
+
+	def __init__(self, mode, prs):
+		self.mode   = mode
+		self.parser = prs
+
+	def engage(self):
+		if self.mode == 0:
+			slab = SLAB_A(self.parser)
+			slab.engage()
 
 class PARSER:
 
@@ -14,16 +68,17 @@ class PARSER:
 		self.mode      = self.mode(prs.mode)
 
 		# Filters
+		self.verbose   = prs.verbose
 		self.world     = prs.world
-		self.interface = self.interface(prs.interface)
-		self.channels  = self.channels(prs.channels)
-		self.essids    = self.form_essids(prs.essids)
-		self.aps       = self.form_macs(prs.aps)
-		self.stations  = self.form_macs(prs.stations)
-		self.filters   = self.form_macs(prs.filters)
 
 		if self.mode == 0:
-			self.wordlist = self.wordlist(prs.wordlist)
+			self.interface = self.interface(prs.interface)
+			self.channels  = self.channels(prs.channels)
+			self.essids    = self.form_essids(prs.essids)
+			self.aps       = self.form_macs(prs.aps)
+			self.stations  = self.form_macs(prs.stations)
+			self.filters   = self.form_macs(prs.filters)
+			self.output    = self.output(prs.output)
 
 	def mode(self, md):
 		amodes = (0, 1, 2)
@@ -32,11 +87,11 @@ class PARSER:
 		else:
 			pull.halt("Invalid Mode Supplied. ", True, pull.RED)
 
-	def wordlist(self, wd):
-		if wd:
-
+	def output(self, fl):
+		if fl:
+			return open(fl, "w")
 		else:
-
+			pull.halt("Output Filename Not provided. Please supply an output", True, pull.RED)
 
 	def channels(self, ch):
 		retval = list(range(1,15)) if self.world else list(range(1,12))
@@ -111,15 +166,31 @@ def main():
 	parser.add_argument('-s', '--stations'     , dest="stations" , default="", type=str)
 	parser.add_argument('-f', '--filters'      , dest="filters"  , default="", type=str)
 	parser.add_argument(      '--world'        , dest="world"    , default=0 , type=int)
+	parser.add_argument(      '--verbose'      , dest="verbose"  , default=False, action="store_true")
 
 	# Mode
 	parser.add_argument('-m', '--mode'         , dest="mode"     , default=0 , type=int)
 
 	# Mode A
-	parser.add_argument('-w', '--wordlist'     , dest="wordlist" , default="", type=str)
+	parser.add_argument('-o', '--output'       , dest="output"   , default="", type=str)
 
 	options = parser.parse_args()
 	parser  = PARSER(options)
+
+	pull.print(
+		"^",
+		"Starting Broot Engine...",
+		pull.DARKCYAN
+	)
+
+	handler = HANDLER(parser.mode, parser)
+	handler.engage()
+
+	pull.print(
+		"<",
+		"Done!",
+		pull.DARKCYAN
+	)
 
 if __name__ == "__main__":
 	pull = PULL()

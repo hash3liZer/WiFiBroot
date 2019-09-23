@@ -156,22 +156,22 @@ class PARSER:
 def main():
 	parser = argparse.ArgumentParser(add_help=True)
 
-	# Interface Argument
-	parser.add_argument('-i', '--interface'    , dest="interface", default="", type=str)
+	# Mode
+	parser.add_argument('-m', '--mode'         , dest="mode"     , default=0 , type=int)
 
-	# Filterss
+	# Filters
+	parser.add_argument(      '--verbose'      , dest="verbose"  , default=False, action="store_true")
+
+	# Mode 0, 1, 5
+	parser.add_argument('-i', '--interface'    , dest="interface", default="", type=str)
 	parser.add_argument('-c', '--channel'      , dest="channels" , default=0 , type=int)
 	parser.add_argument('-e', '--essids'       , dest="essids"   , default="", type=str)
 	parser.add_argument('-a', '--accesspoints' , dest="aps"      , default="", type=str)
 	parser.add_argument('-s', '--stations'     , dest="stations" , default="", type=str)
 	parser.add_argument('-f', '--filters'      , dest="filters"  , default="", type=str)
 	parser.add_argument(      '--world'        , dest="world"    , default=0 , type=int)
-	parser.add_argument(      '--verbose'      , dest="verbose"  , default=False, action="store_true")
 
-	# Mode
-	parser.add_argument('-m', '--mode'         , dest="mode"     , default=0 , type=int)
-
-	# Mode A
+	# Mode 0
 	parser.add_argument('-o', '--output'       , dest="output"   , default="", type=str)
 
 	options = parser.parse_args()

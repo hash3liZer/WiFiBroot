@@ -7,6 +7,7 @@ from scapy.layers.dot11 import RadioTap
 from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import Dot11Beacon
 from scapy.layers.dot11 import Dot11Elt
+from scapy.layers.dot11 import Dot11RSN
 from scapy.layers.dot11 import Dot11FCS
 from scapy.layers.eap   import EAPOL
 
@@ -78,7 +79,12 @@ class SNIFFER:
 		return retval
 
 	def extract_encryption(self, pkt):
-		return
+		retval = ''
+
+		if pkt.haslayer(Dot11RSN):
+			retval = 'WPA2'
+
+		return retval
 
 	def extract_cipher(self, pkt):
 		return

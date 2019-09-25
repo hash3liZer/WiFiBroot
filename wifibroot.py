@@ -6,6 +6,7 @@ import sys
 import argparse
 import subprocess
 from pull import PULL
+from tabulate import tabulate
 from wireless import SNIFFER
 
 class SLAB_A:
@@ -30,6 +31,28 @@ class SLAB_A:
 		)
 
 		sniffer.sniff()
+		aps = sniffer._SNIFFER__ACCESSPOINTS
+		return aps
+
+	def pull_aps(self, aps):
+		headers = headers = [pull.BOLD + 'BSSID', 'PWR', 'CHANNEL', 'ENC', 'CIPHER', 'AUTH', 'DEV', 'ESSID', 'STA\'S' + pull.END]
+		rows = []
+		for ap in list(aps.keys()):
+			rows.append([
+					pull.DARKCYAN + aps[ ap ][ 'bssid' ] + pull.END,
+					pull.RED + str(aps[ ap ][ 'power' ]) + pull.END,
+					aps[ ap ][ 'channel' ],
+					pull.DARKCYAN + aps[ ap ][ 'encryption' ] + pull.END,
+					pull.YELLOW + aps[ ap ][ 'cipher' ] + pull.END,
+					pull.YELLOW +  aps[ ap ][ 'auth' ] + pull.END,
+					'',
+					pull.GREEN + aps[ ap ][ 'essid' ] + pull.GREEN,
+					pull.RED + str(len(aps[ ap ][ 'stations' ])) + pull.END
+				])
+		towrite = tabulate(rows, headers=headers) + "\n"
+		pull.linebreak()
+		pull.write(towrite)
+		pull.linebreak()
 
 	def engage(self):
 		pull.print(
@@ -47,8 +70,8 @@ class SLAB_A:
 			pull.GREEN
 		)
 
-		self.sniff()
-
+		aps = self.sniff()
+		self.pull_aps( aps )
 
 class HANDLER:
 

@@ -6,6 +6,7 @@ import curses
 import random
 import threading
 import subprocess
+from tabulate import tabulate
 from scapy.sendrecv import sniff
 from scapy.layers.dot11 import RadioTap
 from scapy.layers.dot11 import Dot11
@@ -282,11 +283,30 @@ class SNIFFER:
 		sys.stdout.write("\r")
 		self.__THREADRUNNER = False
 
+		screen.clear()
+		screen.refresh()
 		curses.nocbreak()
 		curses.echo()
 		screen.keypad(False)
 		curses.endwin()
 
 	def write(self, screen):
+		headers = ['BSSID', 'PWR', 'CHANNEL', 'ENC', 'CIPHER', 'AUTH', 'DEV', 'ESSID', 'STA\'S']
 		while self.__THREADRUNNER:
-			pass
+			rows = []
+			for ap in list(self.__ACCESSPOINTS.keys()):
+				rows.append([
+					self.__ACCESSPOINTS[ ap ][ 'bssid' ],
+					self.__ACCESSPOINTS[ ap ][ 'power' ],
+					self.__ACCESSPOINTS[ ap ][ 'channel' ],
+					self.__ACCESSPOINTS[ ap ][ 'encryption' ],
+					self.__ACCESSPOINTS[ ap ][ 'cipher' ],
+					self.__ACCESSPOINTS[ ap ][ 'auth' ],
+					'',
+					self.__ACCESSPOINTS[ ap ][ 'essid' ],
+					len(self.__ACCESSPOINTS[ ap ][ 'stations' ])
+				])
+
+			towrite = tabulate(rows, headers=headers)
+			screen.addstr(0, 0, towrite)
+			screen.refresh()

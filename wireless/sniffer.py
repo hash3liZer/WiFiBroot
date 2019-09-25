@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import time
+import curses
 import random
 import threading
 import subprocess
@@ -18,6 +19,7 @@ from scapy.layers.eap   import EAPOL
 
 class SNIFFER:
 
+	__THREADRUNNER = True
 	__ACCESSPOINTS = {}
 	__EXCEPTIONS = [
 		'ff:ff:ff:ff:ff:ff',
@@ -27,6 +29,10 @@ class SNIFFER:
 		'01:80:c2:00:00:00',
 		'01:00:5e:'
 	]
+
+	def __del__(self):
+		self.__THREADRUNNER = False
+		time.sleep(2)
 
 	def __init__(self, interface, channels, essids, aps, stations, filters):
 		self.interface = interface
@@ -252,7 +258,7 @@ class SNIFFER:
 					self.update_stations(ap, sta)
 
 	def hopper(self):
-		while True:
+		while self.__THREADRUNNER:
 			ch = random.choice(self.channels)
 			subprocess.call(['iwconfig', self.interface, 'channel', str(ch)])
 
@@ -263,5 +269,24 @@ class SNIFFER:
 		t.daemon = True
 		t.start()
 
+		screen = curses.initscr()
+		curses.noecho()
+		curses.cbreak()
+		screen.keypad(True)
+
+		t = threading.Thread(target=self.write, args=(screen,))
+		t.daemon = True
+		t.start()
+
 		sniff(iface=self.interface, prn=self.filter)
 		sys.stdout.write("\r")
+		self.__THREADRUNNER = False
+
+		curses.nocbreak()
+		curses.echo()
+		screen.keypad(False)
+		curses.endwin()
+
+	def write(self, screen):
+		while self.__THREADRUNNER:
+			pass

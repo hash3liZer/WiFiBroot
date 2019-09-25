@@ -12,6 +12,7 @@ from wireless import SNIFFER
 class SLAB_A:
 
 	def __init__(self, prs):
+		self.verbose   = prs.verbose
 		self.interface = prs.interface
 		self.channels  = prs.channels
 		self.essids    = prs.essids
@@ -28,6 +29,8 @@ class SLAB_A:
 			self.aps,
 			self.stations,
 			self.filters,
+			pull,
+			self.verbose
 		)
 
 		sniffer.sniff()
@@ -35,24 +38,42 @@ class SLAB_A:
 		return aps
 
 	def pull_aps(self, aps):
-		headers = headers = [pull.BOLD + 'BSSID', 'PWR', 'CHANNEL', 'ENC', 'CIPHER', 'AUTH', 'DEV', 'ESSID', 'STA\'S' + pull.END]
+		headers = [pull.BOLD + '#', 'BSSID', 'PWR', 'CH', 'ENC', 'CIPHER', 'AUTH', 'DEV', 'ESSID', 'STA\'S' + pull.END] if self.verbose else \
+					[pull.BOLD + '#', 'BSSID', 'PWR', 'CH', 'ENC', 'CIPHER', 'AUTH', 'ESSID', 'STA\'S' + pull.END]
 		rows = []
 		for ap in list(aps.keys()):
-			rows.append([
-					pull.DARKCYAN + aps[ ap ][ 'bssid' ] + pull.END,
-					pull.RED + str(aps[ ap ][ 'power' ]) + pull.END,
-					aps[ ap ][ 'channel' ],
-					pull.DARKCYAN + aps[ ap ][ 'encryption' ] + pull.END,
-					pull.YELLOW + aps[ ap ][ 'cipher' ] + pull.END,
-					pull.YELLOW +  aps[ ap ][ 'auth' ] + pull.END,
-					'',
-					pull.GREEN + aps[ ap ][ 'essid' ] + pull.GREEN,
-					pull.RED + str(len(aps[ ap ][ 'stations' ])) + pull.END
-				])
+			if self.verbose:
+				rows.append([
+						list(aps.keys()).index(ap),
+						pull.DARKCYAN + aps[ ap ][ 'bssid' ].upper() + pull.END,
+						pull.RED + str(aps[ ap ][ 'power' ]) + pull.END,
+						aps[ ap ][ 'channel' ],
+						pull.DARKCYAN + aps[ ap ][ 'encryption' ] + pull.END,
+						pull.YELLOW + aps[ ap ][ 'cipher' ] + pull.END,
+						pull.YELLOW +  aps[ ap ][ 'auth' ] + pull.END,
+						aps[ ap ][ 'device' ],
+						pull.GREEN + aps[ ap ][ 'essid' ] + pull.GREEN,
+						pull.RED + str(len(aps[ ap ][ 'stations' ])) + pull.END
+					])
+			else:
+				rows.append([
+						list(aps.keys()).index(ap),
+						pull.DARKCYAN + aps[ ap ][ 'bssid' ].upper() + pull.END,
+						pull.RED + str(aps[ ap ][ 'power' ]) + pull.END,
+						aps[ ap ][ 'channel' ],
+						pull.DARKCYAN + aps[ ap ][ 'encryption' ] + pull.END,
+						pull.YELLOW + aps[ ap ][ 'cipher' ] + pull.END,
+						pull.YELLOW +  aps[ ap ][ 'auth' ] + pull.END,
+						pull.GREEN + aps[ ap ][ 'essid' ] + pull.GREEN,
+						pull.RED + str(len(aps[ ap ][ 'stations' ])) + pull.END
+					])
 		towrite = tabulate(rows, headers=headers) + "\n"
 		pull.linebreak()
 		pull.write(towrite)
 		pull.linebreak()
+
+	def extract(self, aps):
+		return
 
 	def engage(self):
 		pull.print(
@@ -72,6 +93,7 @@ class SLAB_A:
 
 		aps = self.sniff()
 		self.pull_aps( aps )
+		tgt = self.extract(aps)
 
 class HANDLER:
 

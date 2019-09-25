@@ -35,13 +35,15 @@ class SNIFFER:
 		self.__THREADRUNNER = False
 		time.sleep(2)
 
-	def __init__(self, interface, channels, essids, aps, stations, filters):
+	def __init__(self, interface, channels, essids, aps, stations, filters, pull, verbose):
 		self.interface = interface
 		self.channels  = channels
 		self.essids    = essids
 		self.aps       = aps
 		self.stations  = stations
 		self.filters   = filters
+		self.pull      = pull
+		self.verbose   = verbose
 
 	def extract_bssid(self, pkt):
 		bssid = ''
@@ -227,6 +229,7 @@ class SNIFFER:
 			encryption = self.extract_encryption(pkt)
 			cipher     = self.extract_cipher(pkt)
 			auth       = self.extract_auth(pkt)
+			device     = self.pull.get_mac( bssid )
 
 			toappend = {
 				'bssid': bssid,
@@ -236,6 +239,7 @@ class SNIFFER:
 				'encryption': encryption,
 				'cipher': cipher,
 				'auth': auth,
+				'device': device,
 				'stations': []
 			}
 
@@ -291,21 +295,36 @@ class SNIFFER:
 		curses.endwin()
 
 	def write(self, screen):
-		headers = ['BSSID', 'PWR', 'CHANNEL', 'ENC', 'CIPHER', 'AUTH', 'DEV', 'ESSID', 'STA\'S']
+		headers = ['#', 'BSSID', 'PWR', 'CHANNEL', 'ENC', 'CIPHER', 'AUTH', 'DEV', 'ESSID', 'STA\'S'] if self.verbose else \
+					['#', 'BSSID', 'PWR', 'CHANNEL', 'ENC', 'CIPHER', 'AUTH', 'ESSID', 'STA\'S']
 		while self.__THREADRUNNER:
 			rows = []
 			for ap in list(self.__ACCESSPOINTS.keys()):
-				rows.append([
-					self.__ACCESSPOINTS[ ap ][ 'bssid' ],
-					self.__ACCESSPOINTS[ ap ][ 'power' ],
-					self.__ACCESSPOINTS[ ap ][ 'channel' ],
-					self.__ACCESSPOINTS[ ap ][ 'encryption' ],
-					self.__ACCESSPOINTS[ ap ][ 'cipher' ],
-					self.__ACCESSPOINTS[ ap ][ 'auth' ],
-					'',
-					self.__ACCESSPOINTS[ ap ][ 'essid' ],
-					len(self.__ACCESSPOINTS[ ap ][ 'stations' ])
-				])
+				if self.verbose:
+					rows.append([
+						list(self.__ACCESSPOINTS.keys()).index(ap),
+						self.__ACCESSPOINTS[ ap ][ 'bssid' ].upper(),
+						self.__ACCESSPOINTS[ ap ][ 'power' ],
+						self.__ACCESSPOINTS[ ap ][ 'channel' ],
+						self.__ACCESSPOINTS[ ap ][ 'encryption' ],
+						self.__ACCESSPOINTS[ ap ][ 'cipher' ],
+						self.__ACCESSPOINTS[ ap ][ 'auth' ],
+						self.__ACCESSPOINTS[ ap ][ 'device' ],
+						self.__ACCESSPOINTS[ ap ][ 'essid' ],
+						len(self.__ACCESSPOINTS[ ap ][ 'stations' ])
+					])
+				else:
+					rows.append([
+						list(self.__ACCESSPOINTS.keys()).index(ap),
+						self.__ACCESSPOINTS[ ap ][ 'bssid' ].upper(),
+						self.__ACCESSPOINTS[ ap ][ 'power' ],
+						self.__ACCESSPOINTS[ ap ][ 'channel' ],
+						self.__ACCESSPOINTS[ ap ][ 'encryption' ],
+						self.__ACCESSPOINTS[ ap ][ 'cipher' ],
+						self.__ACCESSPOINTS[ ap ][ 'auth' ],
+						self.__ACCESSPOINTS[ ap ][ 'essid' ],
+						len(self.__ACCESSPOINTS[ ap ][ 'stations' ])
+					])
 
 			towrite = tabulate(rows, headers=headers)
 			screen.addstr(0, 0, towrite)

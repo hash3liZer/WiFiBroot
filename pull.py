@@ -98,6 +98,11 @@ class PULL:
 		for n in range(0, howmany):
 			sys.stdout.write( "\n" )
 
+	def write(self, statement):
+		sys.stdout.write(
+			statement
+		)
+
 	def print(self, sig, statement, *colors):
 		cc = ''
 		cc = "".join([color for color in colors])

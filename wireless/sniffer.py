@@ -13,11 +13,20 @@ from scapy.layers.dot11 import Dot11Elt
 from scapy.layers.dot11 import Dot11EltRSN
 from scapy.layers.dot11 import Dot11FCS
 from scapy.layers.dot11 import Dot11EltMicrosoftWPA
+from scapy.layers.dot11 import Dot11EltCountry
 from scapy.layers.eap   import EAPOL
 
 class SNIFFER:
 
 	__ACCESSPOINTS = {}
+	__EXCEPTIONS = [
+		'ff:ff:ff:ff:ff:ff',
+		'00:00:00:00:00:00',
+		'33:33:00:',
+		'33:33:ff:',
+		'01:80:c2:00:00:00',
+		'01:00:5e:'
+	]
 
 	def __init__(self, interface, channels, essids, aps, stations, filters):
 		self.interface = interface
@@ -150,15 +159,57 @@ class SNIFFER:
 
 		return retval
 
-	def toadd(self, bss):
-		retval = True
+	def exception(self, sender, receiver):
+		retval = False
 
-		for ap in list(self.__ACCESSPOINTS.keys()):
-			if bss == ap:
-				retval = False
+		for exception in self.__EXCEPTIONS:
+			if sender.startswith(exception) or receiver.startswith(exception):
+				retval = True
 				break
 
 		return retval
+
+	def filter_devices(self, sn, rc):
+		retval = {
+			'ap': '',
+			'sta': ''
+		}
+
+		for bss in list(self.__ACCESSPOINTS.keys()):
+			if sn == bss:
+				retval[ 'ap'  ] = sn
+				retval[ 'sta' ] = rc
+			elif rc == bss:
+				retval[ 'ap'  ] = rc
+				retval[ 'sta' ] = sn 
+
+		return retval
+
+	def update_stations(self, ap, sta):
+		if ap and sta:
+			stations = self.__ACCESSPOINTS[ ap ][ 'stations' ]
+			if sta not in stations:
+				stations.append( sta )
+				self.__ACCESSPOINTS[ ap ][ 'stations' ] = stations
+
+	def update(self, toappend):
+		bssid = toappend.get('bssid')
+		essid = toappend.get('essid')
+		channel = toappend.get('channel')
+		power   = toappend.get('power')
+		encryption = toappend.get('encryption')
+		cipher  = toappend.get('cipher')
+		auth    = toappend.get('auth')
+
+		if bssid in list(self.__ACCESSPOINTS.keys()):
+			self.__ACCESSPOINTS[ bssid ][ 'essid' ] = essid
+			self.__ACCESSPOINTS[ bssid ][ 'channel' ] = channel
+			self.__ACCESSPOINTS[ bssid ][ 'power' ] = power
+			self.__ACCESSPOINTS[ bssid ][ 'encryption' ] = encryption
+			self.__ACCESSPOINTS[ bssid ][ 'cipher' ] = cipher
+			self.__ACCESSPOINTS[ bssid ][ 'auth' ] = auth
+		else:
+			self.__ACCESSPOINTS[ bssid ] = toappend
 
 	def filter(self, pkt):
 		if pkt.haslayer(Dot11Beacon):
@@ -178,15 +229,32 @@ class SNIFFER:
 				'encryption': encryption,
 				'cipher': cipher,
 				'auth': auth,
+				'stations': []
 			}
 
-			self.__ACCESSPOINTS[ bssid ] = toappend
-			print(self.__ACCESSPOINTS)
+			self.update(toappend)
+		else:
+			sender = receiver = ""
+			if pkt.haslayer(Dot11FCS) and pkt.getlayer(Dot11FCS).type == 2 and not pkt.haslayer(EAPOL):
+				sender   = pkt.getlayer(Dot11FCS).addr2
+				receiver = pkt.getlayer(Dot11FCS).addr1
+
+			elif pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == 2 and not pkt.haslayer(EAPOL):
+				sender   = pkt.getlayer(Dot11).addr2
+				receiver = pkt.getlayer(Dot11).addr1
+
+			if sender and receiver:
+				if not self.exception(sender, receiver):
+					devices = self.filter_devices(sender, receiver)
+					ap      = devices.get('ap')
+					sta     = devices.get('sta')
+
+					self.update_stations(ap, sta)
 
 	def hopper(self):
 		while True:
 			ch = random.choice(self.channels)
-			subprocess.call(['iwconfig', self.interface, 'channel', ch])
+			subprocess.call(['iwconfig', self.interface, 'channel', str(ch)])
 
 			time.sleep(0.5)
 

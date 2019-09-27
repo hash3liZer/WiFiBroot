@@ -73,6 +73,13 @@ class SLAB_A:
 		pull.linebreak()
 
 	def extract(self, aps):
+		alist = tuple(range(0, len(aps)))
+		alist = [str(it) for it in alist]
+		retval = int(pull.input( "?", "Enter Your Target Number: ", alist, pull.BLUE ))
+		tgt   = aps.get( list(aps.keys())[ retval ] )
+		return tgt
+
+	def loop(self):
 		return
 
 	def engage(self):
@@ -94,6 +101,7 @@ class SLAB_A:
 		aps = self.sniff()
 		self.pull_aps( aps )
 		tgt = self.extract(aps)
+		self.loop()
 
 class HANDLER:
 

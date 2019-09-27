@@ -135,10 +135,8 @@ class PULL:
 				))
 		if value:
 			if validation:
-				if validation[0].lower() == value.lower():
-					return True
-				elif validation[1].lower() == value.lower():
-					return False
+				if value in validation:
+					return value.lower()
 				else:
 					self.print("!", "Something Not Valid here. Enter a Valid Value.", self.RED)
 					value = self.input(sig, statement, validation, cc)

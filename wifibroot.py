@@ -8,6 +8,7 @@ import subprocess
 from pull import PULL
 from tabulate import tabulate
 from wireless import SNIFFER
+from wireless import CAPTURE
 
 class SLAB_A:
 
@@ -79,8 +80,66 @@ class SLAB_A:
 		tgt   = aps.get( list(aps.keys())[ retval ] )
 		return tgt
 
-	def loop(self):
-		return
+	def loop(self, tgt):
+		bssid = tgt.get('bssid')
+		essid = tgt.get('essid')
+		channel = tgt.get('channel')
+		power = tgt.get('power')
+		device = tgt.get('device')
+		encryption = tgt.get('encryption')
+		cipher= tgt.get('cipher')
+		auth  = tgt.get('auth')
+		stations = tgt.get('stations')
+
+		pull.print(
+			"*",
+			"TARGET BSS [{bss}] ESS [{ess}] CH [{ch}] PWR [{power}]".format(
+				bss=pull.DARKCYAN + bssid.upper() + pull.END,
+				ess=pull.YELLOW + essid + pull.END,
+				ch =pull.RED + str(channel) + pull.END,
+				power=pull.RED  + str(power)  + pull.END
+			),
+			pull.YELLOW
+		)
+
+		pull.print(
+			"*",
+			"TARGET SEC [{enc}] CPR [{cipher}] AUTH [{auth}] PWR [{stations}]".format(
+				enc=pull.DARKCYAN + encryption + pull.END,
+				cipher=pull.YELLOW + cipher + pull.END,
+				auth =pull.RED + auth + pull.END,
+				stations=pull.RED  + str(len(stations)) + pull.END
+			),
+			pull.YELLOW
+		)
+
+		pull.print(
+			"-", "Stations Discovered ->", pull.DARKCYAN
+		)
+
+		for station in stations:
+			pull.indent("-->", station.upper() + " (" + pull.DARKCYAN + pull.get_mac(station) + pull.END + ")", pull.YELLOW)
+
+	def capture(self, tgt):
+		bssid = tgt.get('bssid')
+		essid = tgt.get('essid')
+		channel = tgt.get('channel')
+		power = tgt.get('power')
+		device = tgt.get('device')
+		encryption = tgt.get('encryption')
+		cipher= tgt.get('cipher')
+		auth  = tgt.get('auth')
+		stations = tgt.get('stations')
+
+		pull.print(
+				"^",
+				"Engaging with the target...",
+				pull.GREEN
+			)
+
+		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, stations)
+		capture.channeler()
+		capture.engage()
 
 	def engage(self):
 		pull.print(
@@ -101,7 +160,8 @@ class SLAB_A:
 		aps = self.sniff()
 		self.pull_aps( aps )
 		tgt = self.extract(aps)
-		self.loop()
+		self.loop( tgt )
+		self.capture( tgt )
 
 class HANDLER:
 
@@ -112,7 +172,8 @@ class HANDLER:
 	def engage(self):
 		if self.mode == 0:
 			slab = SLAB_A(self.parser)
-			slab.engage()
+			
+		slab.engage()
 
 class PARSER:
 

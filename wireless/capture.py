@@ -9,6 +9,7 @@ import subprocess
 from tabulate import tabulate
 from scapy.sendrecv import sniff
 from scapy.layers.dot11 import RadioTap
+from scapy.layers.dot11 import Dot11Deauth
 from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import Dot11Beacon
 from scapy.layers.dot11 import Dot11Elt
@@ -36,8 +37,16 @@ class CAPTURE:
 		ch = str(self.channel)
 		subprocess.call(['iwconfig', self.interface, 'channel', ch])
 
+	def jammer(self):
+		while True:
+			pass
+
 	def capture(self, pkt):
 		return
 
 	def engage(self):
+		t = threading.Thread(target=self.jammer)
+		t.daemon = True
+		t.start()
+
 		sniff(iface=self.interface, prn=self.capture)

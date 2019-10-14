@@ -139,6 +139,14 @@ class SLAB_A:
 
 		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, stations)
 		capture.channeler()
+
+		pull.print(
+			"^",
+			"Listening to Handshakes ...",
+			pull.BLUE
+		)
+
+		capture.crater()
 		capture.engage()
 
 	def engage(self):
@@ -303,7 +311,7 @@ def main():
 	pull.print(
 		"<",
 		"Done!",
-		pull.DARKCYAN
+		"\r", pull.DARKCYAN
 	)
 
 if __name__ == "__main__":

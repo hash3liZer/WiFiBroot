@@ -11,6 +11,11 @@ from tabulate import tabulate
 from wireless import SNIFFER
 from wireless import CAPTURE
 
+
+############################################
+################# SLAB A ###################
+############################################
+
 class SLAB_A:
 
 	def __init__(self, prs):
@@ -22,6 +27,9 @@ class SLAB_A:
 		self.stations  = prs.stations
 		self.filters   = prs.filters
 		self.output    = prs.output
+		self.packets   = prs.packets
+		self.code      = prs.code
+		self.delay     = prs.delay
 
 	def sniff(self):
 		sniffer = SNIFFER(
@@ -138,7 +146,7 @@ class SLAB_A:
 				pull.GREEN
 			)
 
-		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, self.output)
+		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, self.output, self.packets, self.code, self.delay)
 		capture.channeler()
 
 		pull.print(
@@ -172,6 +180,145 @@ class SLAB_A:
 		self.loop( tgt )
 		self.capture( tgt )
 
+
+############################################
+################# SLAB B ###################
+############################################
+
+class SLAB_B:
+
+	def __init__(self, prs):
+		self.verbose   = prs.verbose
+		self.interface = prs.interface
+		self.channels  = prs.channels
+		self.essids    = prs.essids
+		self.aps       = prs.aps
+		self.stations  = prs.stations
+		self.filters   = prs.filters
+		self.output    = prs.output
+
+	def sniff(self):
+		sniffer = SNIFFER(
+			self.interface,
+			self.channels,
+			self.essids,
+			self.aps,
+			self.stations,
+			self.filters,
+			pull,
+			self.verbose
+		)
+
+		sniffer.sniff()
+		aps = sniffer._SNIFFER__ACCESSPOINTS
+		return aps
+
+	def extract(self, aps):
+		alist = tuple(range(0, len(aps)))
+		alist = [str(it) for it in alist]
+		retval = int(pull.input( "?", "Enter Your Target Number: ", alist, pull.BLUE ))
+		tgt   = aps.get( list(aps.keys())[ retval ] )
+		return tgt
+
+	def pull_aps(self, aps):
+		headers = [pull.BOLD + '#', 'BSSID', 'PWR', 'CH', 'ENC', 'CIPHER', 'AUTH', 'DEV', 'ESSID', 'STA\'S' + pull.END] if self.verbose else \
+					[pull.BOLD + '#', 'BSSID', 'PWR', 'CH', 'ENC', 'CIPHER', 'AUTH', 'ESSID', 'STA\'S' + pull.END]
+		rows = []
+		for ap in list(aps.keys()):
+			if self.verbose:
+				rows.append([
+						list(aps.keys()).index(ap),
+						pull.DARKCYAN + aps[ ap ][ 'bssid' ].upper() + pull.END,
+						pull.RED + str(aps[ ap ][ 'power' ]) + pull.END,
+						aps[ ap ][ 'channel' ],
+						pull.DARKCYAN + aps[ ap ][ 'encryption' ] + pull.END,
+						pull.YELLOW + aps[ ap ][ 'cipher' ] + pull.END,
+						pull.YELLOW +  aps[ ap ][ 'auth' ] + pull.END,
+						aps[ ap ][ 'device' ],
+						pull.GREEN + aps[ ap ][ 'essid' ] + pull.GREEN,
+						pull.RED + str(len(aps[ ap ][ 'stations' ])) + pull.END
+					])
+			else:
+				rows.append([
+						list(aps.keys()).index(ap),
+						pull.DARKCYAN + aps[ ap ][ 'bssid' ].upper() + pull.END,
+						pull.RED + str(aps[ ap ][ 'power' ]) + pull.END,
+						aps[ ap ][ 'channel' ],
+						pull.DARKCYAN + aps[ ap ][ 'encryption' ] + pull.END,
+						pull.YELLOW + aps[ ap ][ 'cipher' ] + pull.END,
+						pull.YELLOW +  aps[ ap ][ 'auth' ] + pull.END,
+						pull.GREEN + aps[ ap ][ 'essid' ] + pull.GREEN,
+						pull.RED + str(len(aps[ ap ][ 'stations' ])) + pull.END
+					])
+		towrite = tabulate(rows, headers=headers) + "\n"
+		pull.linebreak()
+		pull.write(towrite)
+		pull.linebreak()
+
+	def loop(self, tgt):
+		bssid = tgt.get('bssid')
+		essid = tgt.get('essid')
+		channel = tgt.get('channel')
+		power = tgt.get('power')
+		device = tgt.get('device')
+		encryption = tgt.get('encryption')
+		cipher= tgt.get('cipher')
+		auth  = tgt.get('auth')
+		stations = tgt.get('stations')
+
+		pull.print(
+			"*",
+			"TARGET BSS [{bss}] ESS [{ess}] CH [{ch}] PWR [{power}]".format(
+				bss=pull.DARKCYAN + bssid.upper() + pull.END,
+				ess=pull.YELLOW + essid + pull.END,
+				ch =pull.RED + str(channel) + pull.END,
+				power=pull.RED  + str(power)  + pull.END
+			),
+			pull.YELLOW
+		)
+
+		pull.print(
+			"*",
+			"TARGET SEC [{enc}] CPR [{cipher}] AUTH [{auth}] PWR [{stations}]".format(
+				enc=pull.DARKCYAN + encryption + pull.END,
+				cipher=pull.YELLOW + cipher + pull.END,
+				auth =pull.RED + auth + pull.END,
+				stations=pull.RED  + str(len(stations)) + pull.END
+			),
+			pull.YELLOW
+		)
+
+	def fire(self, tgt):
+		return
+
+	def engage(self):
+		pull.print(
+			"*",
+			"IFACE: [{iface}] CHANNELS [{channels}] OPUT [{output}]".format(
+				iface=pull.DARKCYAN+self.interface+pull.END,
+				channels=pull.DARKCYAN+str(len(self.channels))+pull.END,
+				output=pull.DARKCYAN+"YES"+pull.END
+			),
+			pull.YELLOW
+		)
+		pull.print(
+			"^",
+			"Starting Sniffer. Press CTRL+C to Stop",
+			pull.GREEN
+		)
+
+		aps = self.sniff()
+		self.pull_aps( aps )
+		tgt = self.extract(aps)
+		self.loop( tgt )
+		self.fire( tgt )
+
+
+#############################################
+############## HANDLER ######################
+#############################################
+
+
 class HANDLER:
 
 	def __init__(self, mode, prs):
@@ -179,8 +326,10 @@ class HANDLER:
 		self.parser = prs
 
 	def engage(self):
-		if self.mode == 0:
+		if self.mode == 1:
 			slab = SLAB_A(self.parser)
+		elif self.mode == 2:
+			slab = SLAB_B(self.parser)
 			
 		slab.engage()
 
@@ -196,7 +345,18 @@ class PARSER:
 		self.world     = prs.world
 
 		if self.mode == 1:
+			self.interface = self.interface(prs.interface)
+			self.channels  = self.channels(prs.channels)
+			self.essids    = self.form_essids(prs.essids)
+			self.aps       = self.form_macs(prs.aps)
+			self.stations  = self.form_macs(prs.stations)
+			self.filters   = self.form_macs(prs.filters)
+			self.output    = self.output(prs.output)
+			self.packets   = prs.packets if prs.packets >= 1 else pull.halt("Invalid Number of Packets Specified!", True, pull.RED)
+			self.code      = prs.code    if prs.code    >= 1 else pull.halt("Invalid Code Given!", True, pull.RED)
+			self.delay     = prs.delay   if prs.delay   >= 0 else pull.halt("Invalid Delay Specified!", True, pull.RED)
 
+		elif self.mode == 2:
 			self.interface = self.interface(prs.interface)
 			self.channels  = self.channels(prs.channels)
 			self.essids    = self.form_essids(prs.essids)
@@ -212,6 +372,8 @@ class PARSER:
 			else:
 				if md == 1:
 					pull.helpa()
+				elif md == 2:
+					pull.helpb()
 
 	def mode(self, md):
 		amodes = (1, 2)
@@ -290,13 +452,10 @@ def main():
 	parser = argparse.ArgumentParser(add_help=False)
 
 	parser.add_argument('-h', '--help'         , dest="help"     , default=False, action="store_true")
-	# Mode
 	parser.add_argument('-m', '--mode'         , dest="mode"     , default=0 , type=int)
-
-	# Filters
 	parser.add_argument(      '--verbose'      , dest="verbose"  , default=False, action="store_true")
 
-	# Mode 0, 1, 5
+	# Mode 1, 2
 	parser.add_argument('-i', '--interface'    , dest="interface", default="", type=str)
 	parser.add_argument('-c', '--channel'      , dest="channels" , default=0 , type=int)
 	parser.add_argument('-e', '--essids'       , dest="essids"   , default="", type=str)
@@ -305,8 +464,11 @@ def main():
 	parser.add_argument('-f', '--filters'      , dest="filters"  , default="", type=str)
 	parser.add_argument(      '--world'        , dest="world"    , default=0 , type=int)
 
-	# Mode 0
+	# Mode 1
 	parser.add_argument('-o', '--output'       , dest="output"   , default="", type=str)
+	parser.add_argument('-p', '--packets'      , dest="packets"  , default=25, type=int)
+	parser.add_argument('--code'               , dest="code"     , default=7 , type=int)
+	parser.add_argument('--delay'              , dest="delay"    , default=0.01, type=float)
 
 	options = parser.parse_args()
 	parser  = PARSER(options)

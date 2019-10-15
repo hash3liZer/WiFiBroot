@@ -17,7 +17,7 @@ Use -h, --help after -m, --mode to get help on modes.
 """
 
 __helpa__ = """
-Usage: python3 wifibroot.py -m 0 --interface [Interface] [arguments]
+Usage: python3 wifibroot.py -m 1 --interface [Interface] [arguments]
 
 Mode:
     01   Capture 4-way handshake by sending Deauth
@@ -26,7 +26,42 @@ Mode:
 Manual:
     Args               Description                         Required
     -h, --help         Print this Manual                     NO
-    -m, --mode         Mode, Must be 0                       YES
+    -m, --mode         Mode, Must be 1                       YES
+    -i, --interface    Monitor Mode Interface to Use         YES
+    -c, --channel      Specific Channel to listen on.        NO
+                       Default: All
+    -e, --essids       Essids to Scan For. (Comma-seperate)  NO
+                       Default: All
+    -a, --accesspoints Bssids to Scan For. (Comma-seperate)  NO
+                       Default: All
+    -s, --stations     Specific Stations to target.          NO
+                       Default: All
+    -f, --filters      Bssids to Filter. (Comma-seperate)    NO
+                       Default: All
+    -o, --output       Filename to Store Packets             YES
+                       Default: None
+    -p, --packets      Number of Deauthentication packets
+                       to send. Default: 25                  NO
+        --code         Deauthentication Code to Send
+                       Default: 7                            NO
+        --delay        Delay Between Packets
+                       Default: 0.01                         NO
+        --world        Scan on all 14 channels               NO
+                       Default: False
+        --verbose      Shows Device Manufacturers while
+                       Scanning.                             NO
+"""
+
+__helpb__ = """
+Usage: python3 wifibroot.py -m 2 --interface [Interface] [arguments]
+
+Mode:
+    02   Force AP to transmit EAPOL and capture PMKID
+
+Manual:
+    Args               Description                         Required
+    -h, --help         Print this Manual                     NO
+    -m, --mode         Mode, Must be 1                       YES
     -i, --interface    Monitor Mode Interface to Use         YES
     -c, --channel      Specific Channel to listen on.        NO
                        Default: All
@@ -229,6 +264,11 @@ class PULL:
 	def helpa(self):
 		sys.exit(
 				__helpa__
+		)
+
+	def helpb(self):
+		sys.exit(
+				__helpb__
 		)
 
 	def logo(self):

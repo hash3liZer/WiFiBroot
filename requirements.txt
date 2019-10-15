@@ -1,2 +1,2 @@
 scapy==2.4.3
-tabulate==0.8.4
+tabulate==0.8.4t 

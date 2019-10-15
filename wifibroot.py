@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import signal
 import argparse
 import subprocess
 from pull import PULL
@@ -137,7 +138,7 @@ class SLAB_A:
 				pull.GREEN
 			)
 
-		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, stations)
+		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, self.output)
 		capture.channeler()
 
 		pull.print(
@@ -187,13 +188,15 @@ class PARSER:
 
 	def __init__(self, prs):
 		# Mode Detector
+		self.help      = self.helper(prs.help, prs.mode)
 		self.mode      = self.mode(prs.mode)
 
 		# Filters
 		self.verbose   = prs.verbose
 		self.world     = prs.world
 
-		if self.mode == 0:
+		if self.mode == 1:
+
 			self.interface = self.interface(prs.interface)
 			self.channels  = self.channels(prs.channels)
 			self.essids    = self.form_essids(prs.essids)
@@ -202,8 +205,16 @@ class PARSER:
 			self.filters   = self.form_macs(prs.filters)
 			self.output    = self.output(prs.output)
 
+	def helper(self, hl, md):
+		if hl:
+			if not md:
+				pull.help()
+			else:
+				if md == 1:
+					pull.helpa()
+
 	def mode(self, md):
-		amodes = (0, 1, 2)
+		amodes = (1, 2)
 		if md in amodes:
 			return md
 		else:
@@ -211,7 +222,7 @@ class PARSER:
 
 	def output(self, fl):
 		if fl:
-			return open(fl, "w")
+			return fl
 		else:
 			pull.halt("Output Filename Not provided. Please supply an output", True, pull.RED)
 
@@ -276,8 +287,9 @@ class PARSER:
 			pull.halt("Interface Not Provided. Specify an Interface!", True, pull.RED)
 
 def main():
-	parser = argparse.ArgumentParser(add_help=True)
+	parser = argparse.ArgumentParser(add_help=False)
 
+	parser.add_argument('-h', '--help'         , dest="help"     , default=False, action="store_true")
 	# Mode
 	parser.add_argument('-m', '--mode'         , dest="mode"     , default=0 , type=int)
 

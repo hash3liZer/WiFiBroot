@@ -3,7 +3,47 @@ import sys
 import random
 
 
-__help__ = """Usage:
+__help__ = """
+Usage: python3 wifibroot.py -m [mode] [arguments]
+
+Modes:
+    #     Description                                 Value
+    01    Capture 4-way handshake by sending Deauth
+          frames                                        1
+    02    Capture PMKID by forcing AP to transmit 
+          EAPOL.                                        2
+
+Use -h, --help after -m, --mode to get help on modes. 
+"""
+
+__helpa__ = """
+Usage: python3 wifibroot.py -m 0 --interface [Interface] [arguments]
+
+Mode:
+    01   Capture 4-way handshake by sending Deauth
+         frames 
+
+Manual:
+    Args               Description                         Required
+    -h, --help         Print this Manual                     NO
+    -m, --mode         Mode, Must be 0                       YES
+    -i, --interface    Monitor Mode Interface to Use         YES
+    -c, --channel      Specific Channel to listen on.        NO
+                       Default: All
+    -e, --essids       Essids to Scan For. (Comma-seperate)  NO
+                       Default: All
+    -a, --accesspoints Bssids to Scan For. (Comma-seperate)  NO
+                       Default: All
+    -s, --stations     Specific Stations to target.          NO
+                       Default: All
+    -f, --filters      Bssids to Filter. (Comma-seperate)    NO
+                       Default: All
+    -o, --output       Filename to Store Packets             YES
+                       Default: None
+        --world        Scan on all 14 channels               NO
+                       Default: False
+        --verbose      Shows Device Manufacturers while
+                       Scanning.                             NO
 """
 
 class PULL:
@@ -113,6 +153,16 @@ class PULL:
 				statement=statement
 			))
 
+	def indent(self, sig, statement, *colors):
+		cc = ''
+		cc = "".join([color for color in colors])
+		print("    {mix}{sig}{end} {statement}".format(
+				sig=sig,
+				mix=cc,
+				end=self.END,
+				statement=statement
+			))
+
 	def verbose(self, sig, statement, verbose, *colors):
 		if verbose:
 			cc = ''
@@ -167,7 +217,7 @@ class PULL:
 			for line in lines:
 				line = line.split( " ~ " )
 				if bss.lower().startswith(line[0].lower()[:8]):
-					retval = line[1].split(" ")[0]
+					retval = line[1].split(" ")[0].upper()
 
 		return retval
 
@@ -175,6 +225,11 @@ class PULL:
 		sys.exit(
 				__help__
 			)
+
+	def helpa(self):
+		sys.exit(
+				__helpa__
+		)
 
 	def logo(self):
 		color = random.choice([

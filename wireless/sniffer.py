@@ -240,6 +240,7 @@ class SNIFFER:
 				'cipher': cipher,
 				'auth': auth,
 				'device': device,
+				'beacon': pkt,
 				'stations': []
 			}
 

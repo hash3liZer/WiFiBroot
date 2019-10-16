@@ -10,7 +10,7 @@ from pull import PULL
 from tabulate import tabulate
 from wireless import SNIFFER
 from wireless import CAPTURE
-
+from wireless import PMKID
 
 ############################################
 ################# SLAB A ###################
@@ -289,7 +289,27 @@ class SLAB_B:
 		)
 
 	def fire(self, tgt):
-		return
+		bssid = tgt.get('bssid')
+		essid = tgt.get('essid')
+		channel = tgt.get('channel')
+		power = tgt.get('power')
+		device = tgt.get('device')
+		encryption = tgt.get('encryption')
+		cipher= tgt.get('cipher')
+		auth  = tgt.get('auth')
+		beacon = tgt.get('beacon')
+		stations = tgt.get('stations')
+
+		pull.print(
+				"^",
+				"Engaging with the target...",
+				pull.GREEN
+			)
+
+		pmkid = PMKID(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, self.output)
+		pmkid.channeler()
+
+		pmkid.engage()
 
 	def engage(self):
 		pull.print(

@@ -450,8 +450,7 @@ class PARSER:
 		if essids:
 			toloop = essids.split(",")
 			for essid in toloop:
-				if not re.search(r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", essid):
-					retval.append(essid)
+				retval.append(essid)
 
 		return retval
 

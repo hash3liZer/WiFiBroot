@@ -223,6 +223,9 @@ class SLAB_B:
 		self.stations  = prs.stations
 		self.filters   = prs.filters
 		self.output    = prs.output
+		self.pauth     = prs.pauth
+		self.passo     = prs.passo
+		self.delay     = prs.delay
 
 	def sniff(self):
 		sniffer = SNIFFER(
@@ -333,7 +336,7 @@ class SLAB_B:
 				pull.GREEN
 			)
 
-		pmkid = PMKID(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, self.output)
+		pmkid = PMKID(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, self.output, self.pauth, self.passo, self.delay)
 		pmkid.channeler()
 
 		pmkid.engage()
@@ -389,9 +392,9 @@ class PARSER:
 
 		# Filters
 		self.verbose   = prs.verbose
-		self.world     = prs.world
 
 		if self.mode == 1:
+			self.world     = prs.world
 			self.interface = self.interface(prs.interface)
 			self.channels  = self.channels(prs.channels)
 			self.essids    = self.form_essids(prs.essids)
@@ -404,6 +407,7 @@ class PARSER:
 			self.delay     = prs.delay   if prs.delay   >= 0 else pull.halt("Invalid Delay Specified!", True, pull.RED)
 
 		elif self.mode == 2:
+			self.world     = prs.world
 			self.interface = self.interface(prs.interface)
 			self.channels  = self.channels(prs.channels)
 			self.essids    = self.form_essids(prs.essids)
@@ -411,6 +415,9 @@ class PARSER:
 			self.stations  = self.form_macs(prs.stations)
 			self.filters   = self.form_macs(prs.filters)
 			self.output    = self.pmkid(prs.pmkid)
+			self.pauth     = prs.pauth   if prs.pauth >= 1 else pull.halt("Invalid Number of Authentication Packets!", True, pull.RED)
+			self.passo     = prs.passo   if prs.passo >= 1 else pull.halt("Invalud Number of Association Packets!", True, pull.RED)
+			self.delay     = prs.delay   if prs.delay   >= 0 else pull.halt("Invalid Delay Specified!", True, pull.RED)
 
 	def helper(self, hl, md):
 		if hl:
@@ -526,6 +533,7 @@ def main():
 	parser.add_argument('--pmkid'              , dest="pmkid"    , default="", type=str)
 	parser.add_argument('--pkts-auth'           , dest="pauth"    , default=1 , type=int)
 	parser.add_argument('--pkts-asso'           , dest="passo"    , default=1 , type=int)
+	parser.add_argument('--delay'               , dest="delay"    , default=0.1, type=float)
 
 	options = parser.parse_args()
 	parser  = PARSER(options)

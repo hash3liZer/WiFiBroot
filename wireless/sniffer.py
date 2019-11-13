@@ -199,8 +199,10 @@ class SNIFFER:
 			stations = self.__ACCESSPOINTS[ ap ][ 'stations' ]
 			if sta not in stations:
 				if ((not self.stations) or (self.stations and sta in self.stations)):
-					stations.append( sta )
-					self.__ACCESSPOINTS[ ap ][ 'stations' ] = stations
+					if ((not self.filters) or (self.filters and sta not in self.filters)):
+						
+						stations.append( sta )
+						self.__ACCESSPOINTS[ ap ][ 'stations' ] = stations
 
 	def update(self, toappend):
 		bssid = toappend.get('bssid')
@@ -213,15 +215,16 @@ class SNIFFER:
 
 		if ((not self.aps) or (self.aps and bssid in self.aps)):
 			if ((not self.essids) or (self.essids and essid in self.essids)):
-				if bssid in list(self.__ACCESSPOINTS.keys()):
-					self.__ACCESSPOINTS[ bssid ][ 'essid' ] = essid
-					self.__ACCESSPOINTS[ bssid ][ 'channel' ] = channel
-					self.__ACCESSPOINTS[ bssid ][ 'power' ] = power
-					self.__ACCESSPOINTS[ bssid ][ 'encryption' ] = encryption
-					self.__ACCESSPOINTS[ bssid ][ 'cipher' ] = cipher
-					self.__ACCESSPOINTS[ bssid ][ 'auth' ] = auth
-				else:
-					self.__ACCESSPOINTS[ bssid ] = toappend
+				if ((not self.filters) or (self.filters and bssid not in self.filters)):
+					if bssid in list(self.__ACCESSPOINTS.keys()):
+						self.__ACCESSPOINTS[ bssid ][ 'essid' ] = essid
+						self.__ACCESSPOINTS[ bssid ][ 'channel' ] = channel
+						self.__ACCESSPOINTS[ bssid ][ 'power' ] = power
+						self.__ACCESSPOINTS[ bssid ][ 'encryption' ] = encryption
+						self.__ACCESSPOINTS[ bssid ][ 'cipher' ] = cipher
+						self.__ACCESSPOINTS[ bssid ][ 'auth' ] = auth
+					else:
+						self.__ACCESSPOINTS[ bssid ] = toappend
 
 	def filter(self, pkt):
 		if pkt.haslayer(Dot11Beacon):

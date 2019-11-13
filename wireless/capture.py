@@ -174,7 +174,8 @@ class CAPTURE:
 				if self.JAMMERRUN:
 					pull.print(
 						"-",
-						"Deauth Sent. CODE [{code}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+						"[{packets}] Deauth Sent. CODE [{code}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+							packets  =pull.RED+str(self.pcounter)+pull.END,
 							code     =pull.RED+str(self.code)+pull.END,
 							apvendor =pull.DARKCYAN+pull.get_mac(ap)+pull.END,
 							ap       =ap.upper(),

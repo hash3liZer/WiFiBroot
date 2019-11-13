@@ -12,6 +12,26 @@ from wireless import SNIFFER
 from wireless import CAPTURE
 from wireless import PMKID
 
+DEFAULTHANDLER = signal.getsignal(signal.SIGINT)
+
+class SIGNALER:
+
+	def changer(self):
+		signal.signal(signal.SIGINT, self.put_exit)
+
+	def origanl(self):
+		global DEFAULTHANDLER
+
+		signal.signal(signal.SIGINT, DEFAULTHANDLER)
+
+	def put_exit(self, sig, fr):
+		pull.halt(
+			"Received CTRL + C! Exiting Now!",
+			True,
+			"\r",
+			pull.RED
+		)
+
 ############################################
 ################# SLAB A ###################
 ############################################
@@ -140,6 +160,9 @@ class SLAB_A:
 		auth  = tgt.get('auth')
 		stations = tgt.get('stations')
 
+		if len(stations) == 0:
+			pull.halt("Found No Stations for This Target. Make a Rescan!", True, pull.RED)
+
 		pull.print(
 				"^",
 				"Engaging with the target...",
@@ -175,9 +198,13 @@ class SLAB_A:
 		)
 
 		aps = self.sniff()
+		signal = SIGNALER()
+		signal.changer()
 		self.pull_aps( aps )
 		tgt = self.extract(aps)
 		self.loop( tgt )
+		signal.origanl()
+		del signal
 		self.capture( tgt )
 
 

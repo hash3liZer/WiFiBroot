@@ -63,7 +63,7 @@ class SNIFFER:
 			while True:
 				layer = layers[counter]
 				if hasattr(layer, "ID") and layer.ID == 0:
-					retval = layer.info.decode('ascii')
+					retval = layer.info.decode("utf-8")
 					break
 				else:
 					counter += 1

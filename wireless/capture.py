@@ -55,12 +55,15 @@ class CAPTURE:
 		self.delay    = delay
 
 	def output(self, ofname):
-		if ofname.endswith(".cap") or ofname.endswith(".pcap"):
-			return ofname
-		elif ofname.endswith("."):
-			return (ofname + "cap")
+		if ofname:
+			if ofname.endswith(".cap") or ofname.endswith(".pcap"):
+				return ofname
+			elif ofname.endswith("."):
+				return (ofname + "cap")
+			else:
+				return (ofname + ".cap")
 		else:
-			return (ofname + ".cap")
+			return False
 
 	def channeler(self):
 		ch = str(self.channel)
@@ -131,14 +134,15 @@ class CAPTURE:
 		)
 
 	def write(self, pkts):
-		fl = PcapWriter(self.output, append=(False if self.FIRSTSTORE else True), sync=True)
-		self.FIRSTSTORE = False
+		if self.output:
+			fl = PcapWriter(self.output, append=(False if self.FIRSTSTORE else True), sync=True)
+			self.FIRSTSTORE = False
 
-		fl.write(
-			list(
-				pkts.values()
+			fl.write(
+				list(
+					pkts.values()
+				)
 			)
-		)
 
 	def loop(self):
 		for sta in list(self.__CRATE.keys()):

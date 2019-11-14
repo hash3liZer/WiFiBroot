@@ -73,10 +73,16 @@ Manual:
                        Default: All
     -f, --filters      Bssids to Filter. (Comma-seperate)    NO
                        Default: All
-    -o, --output       Filename to Store Packets             YES
+        --pmkid        Filename to PMKID Capture             NO
                        Default: None
         --world        Scan on all 14 channels               NO
                        Default: False
+        --pkts-auth    Number of Authentication Packets to
+                       Send in one loop. Default: 1          NO
+        --pkts-asso    Number of Association Packets to
+                       Send in one loop. Default: 1          NO
+        --delay        Delay for Authentication and
+                       Association Packets. Default: 0.01    NO
         --verbose      Shows Device Manufacturers while
                        Scanning.                             NO
 """

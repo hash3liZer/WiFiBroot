@@ -225,7 +225,8 @@ class SLAB_B:
 		self.output    = prs.output
 		self.pauth     = prs.pauth
 		self.passo     = prs.passo
-		self.delay     = prs.delay
+		self.dauth     = prs.dauth
+		self.dasso     = prs.dasso
 
 	def sniff(self):
 		sniffer = SNIFFER(
@@ -336,9 +337,12 @@ class SLAB_B:
 				pull.GREEN
 			)
 
-		pmkid = PMKID(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, self.output, self.pauth, self.passo, self.delay)
-		pmkid.channeler()
+		pmkid = PMKID(
+						self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations,
+						self.output, self.pauth, self.passo, self.dauth, self.dasso
+					)
 
+		pmkid.channeler()
 		pmkid.engage()
 
 	def engage(self):
@@ -417,7 +421,8 @@ class PARSER:
 			self.output    = self.pmkid(prs.pmkid)
 			self.pauth     = prs.pauth   if prs.pauth >= 1 else pull.halt("Invalid Number of Authentication Packets!", True, pull.RED)
 			self.passo     = prs.passo   if prs.passo >= 1 else pull.halt("Invalud Number of Association Packets!", True, pull.RED)
-			self.delay     = prs.delay   if prs.delay   >= 0 else pull.halt("Invalid Delay Specified!", True, pull.RED)
+			self.dauth     = prs.dauth   if prs.dauth >= 0 else pull.halt("Invalid Authentication Delay Specified!", True, pull.RED)
+			self.dasso     = prs.dasso   if prs.dasso >= 0 else pull.halt("Invalid Assocaition Delay Specified!", True, pull.RED)
 
 	def helper(self, hl, md):
 		if hl:
@@ -521,19 +526,20 @@ def main():
 	parser.add_argument('-a', '--accesspoints' , dest="aps"      , default="", type=str)
 	parser.add_argument('-s', '--stations'     , dest="stations" , default="", type=str)
 	parser.add_argument('-f', '--filters'      , dest="filters"  , default="", type=str)
-	parser.add_argument(      '--world'        , dest="world"    , default=0 , type=int)
+	parser.add_argument(      '--world'        , dest="world"    , default=False, action="store_true")
 
 	# Mode 1
 	parser.add_argument('-o', '--output'       , dest="output"   , default="", type=str)
-	parser.add_argument('-p', '--packets'      , dest="packets"  , default=25, type=int)
-	parser.add_argument('--code'               , dest="code"     , default=7 , type=int)
-	parser.add_argument('--delay'              , dest="delay"    , default=0.01, type=float)
+	parser.add_argument('-p', '--packets'      , dest="packets"  , default=10, type=int)
+	parser.add_argument(      '--code'         , dest="code"     , default=7 , type=int)
+	parser.add_argument(      '--delay'        , dest="delay"    , default=0.01, type=float)
 
 	# Mode 2
 	parser.add_argument('--pmkid'              , dest="pmkid"    , default="", type=str)
-	parser.add_argument('--pkts-auth'           , dest="pauth"    , default=1 , type=int)
-	parser.add_argument('--pkts-asso'           , dest="passo"    , default=1 , type=int)
-	parser.add_argument('--delay'               , dest="delay"    , default=0.1, type=float)
+	parser.add_argument('--pkts-auth'          , dest="pauth"    , default=1 , type=int)
+	parser.add_argument('--pkts-asso'          , dest="passo"    , default=1 , type=int)
+	parser.add_argument('--delay-auth'         , dest="dauth"    , default=1 , type=float)
+	parser.add_argument('--delay-asso'         , dest="dasso"    , default=1 , type=float)
 
 	options = parser.parse_args()
 	parser  = PARSER(options)

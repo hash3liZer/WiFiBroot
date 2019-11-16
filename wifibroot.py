@@ -435,7 +435,7 @@ class PARSER:
 					pull.helpb()
 
 	def mode(self, md):
-		amodes = (1, 2)
+		amodes = (1, 2, 3)
 		if md in amodes:
 			return md
 		else:
@@ -538,8 +538,15 @@ def main():
 	parser.add_argument('--pmkid'              , dest="pmkid"    , default="", type=str)
 	parser.add_argument('--pkts-auth'          , dest="pauth"    , default=1 , type=int)
 	parser.add_argument('--pkts-asso'          , dest="passo"    , default=1 , type=int)
-	parser.add_argument('--delay-auth'         , dest="dauth"    , default=1 , type=float)
-	parser.add_argument('--delay-asso'         , dest="dasso"    , default=1 , type=float)
+	parser.add_argument('--delay-auth'         , dest="dauth"    , default=0.01 , type=float)
+	parser.add_argument('--delay-asso'         , dest="dasso"    , default=5 , type=float)
+
+	# Mode 3
+	parser.add_argument('-m', '--mask'         , dest="mask"     , default="", type=str)
+	parser.add_argument('-w', '--wordlist'     , dest="wordlist" , default="", type=str)
+	parser.add_argument('-d', '--defer'        , dest="defer"    , default=0 , type=int)
+	parser.add_argument('-r', '--read'         , dest="read"     , default="", type=str)
+	parser.add_argument(''  , '--store'        , dest="store"    , default="", type=str)
 
 	options = parser.parse_args()
 	parser  = PARSER(options)

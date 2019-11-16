@@ -433,6 +433,8 @@ class PARSER:
 					pull.helpa()
 				elif md == 2:
 					pull.helpb()
+				elif md == 3:
+					pull.helpc()
 
 	def mode(self, md):
 		amodes = (1, 2, 3)
@@ -542,11 +544,11 @@ def main():
 	parser.add_argument('--delay-asso'         , dest="dasso"    , default=5 , type=float)
 
 	# Mode 3
-	parser.add_argument('-m', '--mask'         , dest="mask"     , default="", type=str)
+	parser.add_argument('--mask'         , dest="mask"     , default="", type=str)
 	parser.add_argument('-w', '--wordlist'     , dest="wordlist" , default="", type=str)
 	parser.add_argument('-d', '--defer'        , dest="defer"    , default=0 , type=int)
 	parser.add_argument('-r', '--read'         , dest="read"     , default="", type=str)
-	parser.add_argument(''  , '--store'        , dest="store"    , default="", type=str)
+	parser.add_argument('--store'        , dest="store"    , default="", type=str)
 
 	options = parser.parse_args()
 	parser  = PARSER(options)

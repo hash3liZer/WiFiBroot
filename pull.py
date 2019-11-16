@@ -12,6 +12,8 @@ Modes:
           frames                                        1
     02    Capture PMKID by forcing AP to transmit 
           EAPOL.                                        2
+    03    Brute-Force WiFi Key using Handshake (MIC)
+          Dictionary & Mask Attack                      3
 
 Use -h, --help after -m, --mode to get help on modes. 
 """
@@ -85,6 +87,25 @@ Manual:
                        Association Packets. Default: 0.01    NO
         --verbose      Shows Device Manufacturers while
                        Scanning.                             NO
+"""
+
+__helpc__ = """
+Usage: python3 wifibroot.py -m [Mask] -r [Packet File]
+
+Mode:
+    03   Brute-Force WiFi Key Via Dictionary and Mask Attack
+
+Manual:
+    Args               Description                         Required
+    -m, --mask         Mask to Bruteforce WiFi Keys
+                       Refer to Readme.MD for more           No
+    -w, --wordlist     Wordlist Containing passwords
+                       to be checked against hash            YES
+    -r, --read         Read the Capture (Handshake) File     YES
+    -d, --defer        Time Between Each Successive
+                       Attempt. Default: 0s                  NO
+        --store        Store the Final Cracked Key
+                       in a file.                            NO
 """
 
 class PULL:
@@ -275,6 +296,11 @@ class PULL:
 	def helpb(self):
 		sys.exit(
 				__helpb__
+		)
+
+	def helpc(self):
+		sys.exit(
+				__helpc__
 		)
 
 	def logo(self):

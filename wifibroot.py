@@ -363,6 +363,8 @@ class SLAB_B:
 
 		aps = self.sniff()
 		self.pull_aps( aps )
+		signal = SIGNALER()
+		signal.changer()
 		tgt = self.extract(aps)
 		self.loop( tgt )
 		self.fire( tgt )
@@ -540,7 +542,7 @@ def main():
 	parser.add_argument('--pmkid'              , dest="pmkid"    , default="", type=str)
 	parser.add_argument('--pkts-auth'          , dest="pauth"    , default=1 , type=int)
 	parser.add_argument('--pkts-asso'          , dest="passo"    , default=1 , type=int)
-	parser.add_argument('--delay-auth'         , dest="dauth"    , default=0.01 , type=float)
+	parser.add_argument('--delay-auth'         , dest="dauth"    , default=3 , type=float)
 	parser.add_argument('--delay-asso'         , dest="dasso"    , default=5 , type=float)
 
 	# Mode 3

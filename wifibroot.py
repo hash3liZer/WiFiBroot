@@ -11,6 +11,9 @@ from tabulate import tabulate
 from wireless import SNIFFER
 from wireless import CAPTURE
 from wireless import PMKID
+from wireless import HKCRACK
+from scapy.utils import rdpcap
+
 
 DEFAULTHANDLER = signal.getsignal(signal.SIGINT)
 
@@ -369,6 +372,50 @@ class SLAB_B:
 		self.loop( tgt )
 		self.fire( tgt )
 
+#############################################
+############## SLAB C #######################
+#############################################
+
+class SLAB_C:
+
+	def __init__(self, prs):
+		self.packets = prs.packets
+		self.passes  = prs.passes
+		self.defer   = prs.defer
+		self.store   = prs.store
+		self.crack   = HKCRACK(self.packets, self.passes, self.defer, self.store)
+
+	def validate(self):
+		pkts = self.crack.validate()
+
+		if pkts:
+			return
+		else:
+			pull.halt(
+				"The Provided Capture File doesn't Contain any Valid Handshake!",
+				True, 
+				pull.RED
+			)
+
+	def engage(self):
+		pull.print(
+			"*",
+			"Crack Mode [{mode}] Packets [{capture}]".format(
+				mode=pull.YELLOW+"EAPOL 4 Handshakes"+pull.END,
+				capture=pull.RED+str(len(self.packets)),
+			),
+			pull.YELLOW
+		)
+		pull.print(
+			"*",
+			"Captured Passes [{passes}] Store [{store}]".format(
+				passes=pull.DARKCYAN+str(len(self.passes))+pull.END,
+				store=pull.DARKCYAN+("True" if self.store else "False")+pull.END
+			),
+			pull.YELLOW
+		)
+		
+		self.validate()
 
 #############################################
 ############## HANDLER ######################
@@ -386,6 +433,8 @@ class HANDLER:
 			slab = SLAB_A(self.parser)
 		elif self.mode == 2:
 			slab = SLAB_B(self.parser)
+		elif self.mode == 3:
+			slab = SLAB_C(self.parser)
 			
 		slab.engage()
 
@@ -422,9 +471,41 @@ class PARSER:
 			self.filters   = self.form_macs(prs.filters)
 			self.output    = self.pmkid(prs.pmkid)
 			self.pauth     = prs.pauth   if prs.pauth >= 1 else pull.halt("Invalid Number of Authentication Packets!", True, pull.RED)
-			self.passo     = prs.passo   if prs.passo >= 1 else pull.halt("Invalud Number of Association Packets!", True, pull.RED)
+			self.passo     = prs.passo   if prs.passo >= 1 else pull.halt("Invalid Number of Association Packets!", True, pull.RED)
 			self.dauth     = prs.dauth   if prs.dauth >= 0 else pull.halt("Invalid Authentication Delay Specified!", True, pull.RED)
 			self.dasso     = prs.dasso   if prs.dasso >= 0 else pull.halt("Invalid Assocaition Delay Specified!", True, pull.RED)
+
+		elif self.mode == 3:
+			self.packets   = self.packets(prs.read)
+			self.passes    = self.passes(prs.wordlist, prs.mask)
+			self.defer     = prs.defer if prs.defer >= 0 else pull.halt("Invalid Defer Time Provided!", True, pull.RED)
+			self.store     = self.store(prs.store)
+
+	def packets(self, fl):
+		if fl:
+			pkts = rdpcap(fl)
+			return pkts
+		else:
+			pull.halt("Handshake File Not Supplied!", True, pull.RED)
+
+	def passes(self, wd, mk):
+		if not wd and not mk:
+			pull.halt("Wordlist or Mask Required to Perform the Attack!")
+		else:
+			if mk:
+				return mk
+			else:
+				fl    = open(wd)
+				lines = fl.read().splitlines()
+
+				return lines
+
+	def store(self, fl):
+		if fl:
+			return fl
+		else:
+			pull.halt("Ouptut File Not Provided! No Output Will be Produced!", False, pull.RED)
+			return None
 
 	def helper(self, hl, md):
 		if hl:

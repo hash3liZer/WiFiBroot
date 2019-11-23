@@ -25,11 +25,60 @@ from scapy.layers.eap   import EAPOL
 
 class CRACK:
 
+	__FNONCE = "0000000000000000000000000000000000000000000000000000000000000000"
+	__FMIC   = "00000000000000000000000000000000"
+
+	__EAPOLS = {}
+
 	def __init__(self, packets, passes, defer, store):
 		self.packets = packets
 		self.passes  = passes
 		self.defer   = defer
 		self.store   = store
+
+	def extract_sn_rc(self, pkt):
+		try:
+			sn = pkt.getlayer(Dot11FCS).addr2
+			rc = pkt.getlayer(Dot11FCS).addr1
+		except:
+			sn = pkt.getlayer(Dot11).addr2
+			rc = pkt.getlayer(Dot11).addr1
+
+		return (sn, rc)
+
+	def extract_ds(self, pkt):
+		try:
+			tds = pkt.getlayer(Dot11FCS).FCfield & 0x1 !=0
+			fds = pkt.getlayer(Dot11FCS).FCfield & 0x2 !=0
+		except:
+			tds = pkt.getlayer(Dot11).FCfield & 0x1 !=0
+			fds = pkt.getlayer(Dot11).FCfield & 0x2 !=0
+
+		return (tds, fds)
+
+	def validate(self):
+		for pkt in self.packets:
+			if pkt.haslayer(EAPOL):
+				retval = self.extract_sn_rc(pkt)
+				sn     = retval[0]
+				rc     = retval[0]
+
+				retval = self.extract_ds(pkt)
+				tds    = retval[0]
+				fds    = retval[1]
+
+				non   = binascii.hexlify(pkt.getlayer(Raw).load)[26:90].decode()
+				mic   = binascii.hexlify(pkt.getlayer(Raw).load)[154:186].decode()
+
+				if fds:
+					if non != self.__FNONCE and mic == self.__MIC:
+
+					elif non != self.__FNONCE and mic != self.__MIC:
+
+				elif tds:
+					if non != self.__FNONCE and mic != self.__MIC:
+
+					elif non == self.__FNONCE and mic != self.__MIC:
 
 	def engage(self):
 		return

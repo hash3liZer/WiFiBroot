@@ -389,7 +389,7 @@ class SLAB_C:
 		pkts = self.crack.validate()
 
 		if pkts:
-			return
+			self.crack.count_shakes()
 		else:
 			pull.halt(
 				"The Provided Capture File doesn't Contain any Valid Handshake!",
@@ -402,7 +402,7 @@ class SLAB_C:
 			"*",
 			"Crack Mode [{mode}] Packets [{capture}]".format(
 				mode=pull.YELLOW+"EAPOL 4 Handshakes"+pull.END,
-				capture=pull.RED+str(len(self.packets)),
+				capture=pull.RED+str(len(self.packets))+pull.END,
 			),
 			pull.YELLOW
 		)
@@ -490,7 +490,7 @@ class PARSER:
 
 	def passes(self, wd, mk):
 		if not wd and not mk:
-			pull.halt("Wordlist or Mask Required to Perform the Attack!")
+			pull.halt("Wordlist or Mask Required to Perform the Attack!", True, pull.RED)
 		else:
 			if mk:
 				return mk

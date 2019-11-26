@@ -23,6 +23,8 @@ from scapy.layers.dot11 import Dot11EltMicrosoftWPA
 from scapy.layers.dot11 import Dot11EltCountry
 from scapy.layers.eap   import EAPOL
 
+pull = PULL()
+
 class CRACK:
 
 	__FNONCE = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -56,29 +58,58 @@ class CRACK:
 
 		return (tds, fds)
 
+	def count_shakes(self):
+		counter = 0
+
+		for ap in list(self.__EAPOLS.keys()):
+			if len(self.__EAPOLS[ap]) == 4:
+				counter += 1
+
+		pull.print(
+			"*",
+			"Handshakes Captured --> Count [{count}]".format(
+				count=pull.RED+str(counter)+pull.END
+			),
+			pull.YELLOW
+		)
+
 	def validate(self):
 		for pkt in self.packets:
 			if pkt.haslayer(EAPOL):
 				retval = self.extract_sn_rc(pkt)
 				sn     = retval[0]
-				rc     = retval[0]
+				rc     = retval[1]
 
 				retval = self.extract_ds(pkt)
 				tds    = retval[0]
 				fds    = retval[1]
 
+				if fds == True:
+					sta = rc
+				elif tds == True:
+					sta = sn
+
+				if sta not in list(self.__EAPOLS.keys()):
+					self.__EAPOLS[ sta ] = {}
+
 				non   = binascii.hexlify(pkt.getlayer(Raw).load)[26:90].decode()
 				mic   = binascii.hexlify(pkt.getlayer(Raw).load)[154:186].decode()
 
-				if fds:
-					if non != self.__FNONCE and mic == self.__MIC:
+				if fds == True:
+					if non != self.__FNONCE and mic == self.__FMIC:
+						self.__EAPOLS[ rc ][ 1 ] = pkt
+					elif non != self.__FNONCE and mic != self.__FMIC:
+						self.__EAPOLS[ rc ][ 3 ] = pkt
+				elif tds == True:
+					if non != self.__FNONCE and mic != self.__FMIC:
+						self.__EAPOLS[ sn ][ 2 ] = pkt
+					elif non == self.__FNONCE and mic != self.__FMIC:
+						self.__EAPOLS[ sn ][ 4 ] = pkt
 
-					elif non != self.__FNONCE and mic != self.__MIC:
-
-				elif tds:
-					if non != self.__FNONCE and mic != self.__MIC:
-
-					elif non == self.__FNONCE and mic != self.__MIC:
+		for sta in list(self.__EAPOLS.keys()):
+			if len(self.__EAPOLS[sta]) == 4:
+				return True
+		return False
 
 	def engage(self):
 		return

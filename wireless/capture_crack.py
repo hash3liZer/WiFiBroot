@@ -8,6 +8,7 @@ import binascii
 import threading
 import subprocess
 from pull import PULL
+from pbkdf2 import PBKDF2
 from scapy.sendrecv import sniff
 from scapy.sendrecv import sendp
 from scapy.utils    import PcapWriter
@@ -111,5 +112,31 @@ class CRACK:
 				return True
 		return False
 
+	def calculate_hash(self, sta):
+		pkts = self.__EAPOLS.get(sta)
+		pkta = pkts.get(1)
+		pktb = pkts.get(2)
+		pktc = pkts.get(3)
+		pktd = pkts.get(4)
+
+		mic  = binascii.hexlify(pktb.getlayer(Raw).load)[154:186].decode()
+		return mic
+
+	def compute(self, password):
+		pmk = PBKDF2(password, )
+
 	def engage(self):
-		return
+		for sta in list(self.__EAPOLS.keys()):
+			pull.print(
+				"^",
+				"Cracking TGT [{target}] Passes [{passes}]".format(
+					target=pull.DARKCYAN+sta+pull.END,
+					passes=pull.DARKCYAN+str(len(self.passes))+pull.END
+				),
+				pull.DARKCYAN
+			)
+
+			chash = self.calculate_hash( sta )
+
+			for password in self.passes:
+				cracked = self.compute(password)

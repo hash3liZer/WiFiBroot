@@ -632,6 +632,7 @@ def main():
 	parser.add_argument('-w', '--wordlist'     , dest="wordlist" , default="", type=str)
 	parser.add_argument('-d', '--defer'        , dest="defer"    , default=0 , type=int)
 	parser.add_argument('-r', '--read'         , dest="read"     , default="", type=str)
+	parser.add_argument('--essid'        , dest="essid"    , default="", type=str)
 	parser.add_argument('--store'        , dest="store"    , default="", type=str)
 
 	options = parser.parse_args()

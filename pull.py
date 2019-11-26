@@ -97,13 +97,14 @@ Mode:
 
 Manual:
     Args               Description                         Required
-    -m, --mask         Mask to Bruteforce WiFi Keys
+        --mask         Mask to Bruteforce WiFi Keys
                        Refer to Readme.MD for more           No
     -w, --wordlist     Wordlist Containing passwords
                        to be checked against hash            YES
     -r, --read         Read the Capture (Handshake) File     YES
     -d, --defer        Time Between Each Successive
                        Attempt. Default: 0s                  NO
+        --essid        Essid of Target Access Point          YES
         --store        Store the Final Cracked Key
                        in a file.                            NO
 """

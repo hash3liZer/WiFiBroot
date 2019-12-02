@@ -2,8 +2,11 @@ import os
 import re
 import sys
 import time
+import hmac
 import curses
 import random
+import string
+import hashlib
 import binascii
 import threading
 import subprocess
@@ -28,6 +31,7 @@ pull = PULL()
 
 class CRACK:
 
+	__NULL   = '\x00'
 	__PKE    = "Pairwise key expansion"
 
 	__FNONCE = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -147,9 +151,75 @@ class CRACK:
 		mic  = binascii.hexlify(pktb.getlayer(Raw).load)[154:186].decode()
 		return mic
 
-	def compute(self, password):
-		pmk = PBKDF2(password, self.essid, 4096).read(32)
-		#ptk = self.calculate_prf512(pmk, self.__PKE, )
+	def hexdump(self, src, length=16, sep='.'):
+		DISPLAY = string.digits + string.ascii_letters + string.punctuation
+		FILTER = ''.join(((x if x in DISPLAY else '.') for x in map(chr, range(256))))
+		lines = []
+		for c in iter(range(0, len(src), length)):
+			chars = src[c:c+length]
+			hex = ' '.join(["%02x" % ord(x) for x in chars])
+			if len(hex) > 24:
+				hex = "%s %s" % (hex[:24], hex[24:])
+			printable = ''.join(["%s" % FILTER[ord(x)] for x in chars])
+			lines.append("%08x:  %-*s  |%s|\n" % (c, length*3, hex, printable))
+		return ''.join(lines)
+
+	def organize(self, sta):
+		pkts    = self.__EAPOLS.get(sta)
+		pkta    = pkts.get(1)
+		pktb    = pkts.get(2)
+		pktc    = pkts.get(3)
+		pktd    = pkts.get(4)
+
+		ap      = self.extract_sn_rc(pkt)[0]
+
+		apbin   = binascii.a2b_hex(ap.replace(":", ""))
+		stbin   = binascii.a2b_hex(sta.replace(":", ""))
+
+		anonce  = binascii.a2b_hex(binascii.hexlify(pkta.getlayer(Raw).load)[26:90].decode())
+		cnonce  = binascii.a2b_hex(binascii.hexlify(pktb.getlayer(Raw).load)[26:90].decode())
+
+		keydat  = min(apbin, stbin) + max(ap, stbin) + min(anonce, cnonce) + max(anonce, cnonce)
+		version	= chr(pktb.getlayer(EAPOL).version)
+		dtype   = chr(pktb.getlayer(EAPOL).type)
+		dlen    = chr(pktb.getlayer(EAPOL).len)
+
+		payload = binascii.a2b_hex(
+					binascii.hexlify(
+						version+
+						dytpe+
+						self.__NULL+
+						dlen+
+						binascii.a2b_hex(binascii.hexlify(pktb.getlayer(Raw).load)[:154].decode())+
+						self.__NULL * 16+
+						binascii.a2b_hex(binascii.hexlify(self.pkt_ii.getlayer(Raw).load)[186:].decode())
+					)
+				)
+
+		data    = version + dtype + self.__NULL + dlen + pktb.getlayer(Raw).load
+
+		rtval = (keydat, payload, data)
+		return rtval
+
+	def calculate_prf512(self, key, A, B):
+		blen = 64
+		i    = 0
+		R    = ''
+		while i<=((blen*8+159)/160):
+			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),hashlib.sha1)
+			i+=1
+			R = R+hmacsha1.digest()
+		return R[:blen]
+
+	def compute(self, password, kdata):
+		pmk  = PBKDF2(password, self.essid, 4096).read(32)
+		ptk  = self.calculate_prf512(pmk, self.__PKE, kdata)
+
+		mica = binascii.hexlify(hmac.new(ptk[0:16], self.payload, hashlib.md5).digest())
+		micb = binascii.hexlify(hmac.new(ptk__[0:16], self.payload, hashlib.sha1).digest()[:32])
+
+		
+		return True
 
 	def engage(self):
 		for sta in list(self.__EAPOLS.keys()):
@@ -162,7 +232,28 @@ class CRACK:
 				pull.DARKCYAN
 			)
 
-			chash = self.calculate_hash( sta )
+			rtval   = self.organize( sta )
+			kdata   = rtval[0]
+			payload = rtval[1]
+			data    = rtval[2]
+			chash   = self.calculate_hash( sta, kdata )
 
 			for password in self.passes:
 				cracked = self.compute(password)
+				if cracked:
+					pull.print(
+						"$",
+						"Cracked: [{password}]".format(
+							password=pull.GREEN+password+pull.END
+						),
+						pull.GREEN
+					)
+					print(self.hexdump(password))
+				else:
+					pull.print(
+						"*",
+						"Checked: [{password}]".format(
+							password=password
+						),
+						pull.RED
+					)

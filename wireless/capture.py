@@ -38,7 +38,7 @@ class CAPTURE:
 
 	FIRSTSTORE= True
 
-	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, outfname, pkts, code, delay):
+	def __init__(self, iface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, outfname, pkts, code, delay):
 		self.interface = iface
 		self.bssid = bssid
 		self.essid = essid
@@ -48,6 +48,7 @@ class CAPTURE:
 		self.encryption = encryption
 		self.cipher  = cipher
 		self.auth    = auth
+		self.beacon  = beacon
 		self.stations = stations
 		self.output   = self.output(outfname)
 		self.pcounter = pkts
@@ -136,6 +137,12 @@ class CAPTURE:
 	def write(self, pkts):
 		if self.output:
 			fl = PcapWriter(self.output, append=(False if self.FIRSTSTORE else True), sync=True)
+			
+			if self.FIRSTSTORE:
+				fl.write(
+					self.beacon
+				)
+
 			self.FIRSTSTORE = False
 
 			fl.write(

@@ -161,6 +161,7 @@ class SLAB_A:
 		encryption = tgt.get('encryption')
 		cipher= tgt.get('cipher')
 		auth  = tgt.get('auth')
+		beacon = tgt.get('beacon')
 		stations = tgt.get('stations')
 
 		if len(stations) == 0:
@@ -172,7 +173,7 @@ class SLAB_A:
 				pull.GREEN
 			)
 
-		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, stations, self.output, self.packets, self.code, self.delay)
+		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, self.output, self.packets, self.code, self.delay)
 		capture.channeler()
 
 		pull.print(
@@ -383,13 +384,21 @@ class SLAB_C:
 		self.passes  = prs.passes
 		self.defer   = prs.defer
 		self.store   = prs.store
-		self.crack   = HKCRACK(self.packets, self.passes, self.defer, self.store)
+		self.essid   = prs.essid
+		self.crack   = HKCRACK(self.packets, self.passes, self.defer, self.store, self.essid)
 
 	def validate(self):
 		pkts = self.crack.validate()
 
 		if pkts:
-			self.crack.count_shakes()
+			if self.crack.essid:
+				self.crack.count_shakes()
+			else:
+				pull.halt(
+				"The Provided Capture File doesn't Contain any Beacon Frame or ESSID!",
+					True, 
+					pull.RED
+				)	
 		else:
 			pull.halt(
 				"The Provided Capture File doesn't Contain any Valid Handshake!",
@@ -416,7 +425,7 @@ class SLAB_C:
 		)
 		
 		self.validate()
-		self.engage()
+		self.crack.engage()
 
 #############################################
 ############## HANDLER ######################
@@ -481,6 +490,7 @@ class PARSER:
 			self.passes    = self.passes(prs.wordlist, prs.mask)
 			self.defer     = prs.defer if prs.defer >= 0 else pull.halt("Invalid Defer Time Provided!", True, pull.RED)
 			self.store     = self.store(prs.store)
+			self.essid     = prs.essid if prs.essid else None
 
 	def packets(self, fl):
 		if fl:
@@ -616,8 +626,8 @@ def main():
 
 	# Mode 1
 	parser.add_argument('-o', '--output'       , dest="output"   , default="", type=str)
-	parser.add_argument('-p', '--packets'      , dest="packets"  , default=10, type=int)
-	parser.add_argument(      '--code'         , dest="code"     , default=7 , type=int)
+	parser.add_argument('-p', '--packets'      , dest="packets"  , default=3, type=int)
+	parser.add_argument(      '--code'         , dest="code"     , default=7, type=int)
 	parser.add_argument(      '--delay'        , dest="delay"    , default=0.01, type=float)
 
 	# Mode 2

@@ -28,16 +28,37 @@ pull = PULL()
 
 class CRACK:
 
+	__PKE    = "Pairwise key expansion"
+
 	__FNONCE = "0000000000000000000000000000000000000000000000000000000000000000"
 	__FMIC   = "00000000000000000000000000000000"
 
 	__EAPOLS = {}
 
-	def __init__(self, packets, passes, defer, store):
+	def __init__(self, packets, passes, defer, store, essid):
 		self.packets = packets
 		self.passes  = passes
 		self.defer   = defer
 		self.store   = store
+		self.essid   = essid
+
+	def extract_elt_layer(self, identifier, pkt):
+		layers = pkt.getlayer(Dot11Elt)
+		retval = ''
+		counter = 0
+
+		try:
+			while True:
+				layer = layers[counter]
+				if hasattr(layer, "ID") and layer.ID == identifier:
+					retval = layer.info.decode("utf-8")
+					break
+				else:
+					counter += 1
+		except IndexError:
+			pass
+
+		return retval
 
 	def extract_sn_rc(self, pkt):
 		try:
@@ -107,6 +128,10 @@ class CRACK:
 					elif non == self.__FNONCE and mic != self.__FMIC:
 						self.__EAPOLS[ sn ][ 4 ] = pkt
 
+			elif pkt.haslayer(Dot11Beacon):
+				essid = self.extract_elt_layer(0, pkt)
+				self.essid = essid
+
 		for sta in list(self.__EAPOLS.keys()):
 			if len(self.__EAPOLS[sta]) == 4:
 				return True
@@ -123,14 +148,15 @@ class CRACK:
 		return mic
 
 	def compute(self, password):
-		pmk = PBKDF2(password, )
+		pmk = PBKDF2(password, self.essid, 4096).read(32)
+		#ptk = self.calculate_prf512(pmk, self.__PKE, )
 
 	def engage(self):
 		for sta in list(self.__EAPOLS.keys()):
 			pull.print(
 				"^",
 				"Cracking TGT [{target}] Passes [{passes}]".format(
-					target=pull.DARKCYAN+sta+pull.END,
+					target=pull.DARKCYAN+sta.upper()+pull.END,
 					passes=pull.DARKCYAN+str(len(self.passes))+pull.END
 				),
 				pull.DARKCYAN

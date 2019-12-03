@@ -608,6 +608,122 @@ class PARSER:
 		else:
 			pull.halt("Interface Not Provided. Specify an Interface!", True, pull.RED)
 
+class PARSERX:
+
+	def __init__(self, opts):
+		self.mode = self.mode(opts.mode, opts.help)
+		self.help = self.help(opts.help)
+
+	def help(self, hp):
+		if hp:
+			if self.mode == 1:
+				pull.helpa()
+			elif self.mode == 2:
+				pull.helpb()
+			elif self.mode == 3:
+				pull.helpc()
+
+	def mode(self, md, hp):
+		if md:
+			if md in (1, 2, 3):
+				return md
+			else:
+				pull.halt(
+					"~",
+					"Invalid Mode Supplied!",
+					True,
+					pull.RED
+				)
+		else:
+			if hp:
+				pull.help()
+			else:
+				pull.halt(
+					"~",
+					"No Mode Supplied! Required Argument.",
+					True,
+					pull.RED
+				)
+
+class PARSERA:
+
+	def __init__(self, opts):
+		self.interface = self.interface(opts.interface)
+		self.channels  = self.channels(opts.channels)
+		self.essids    = self.form_essids(opts.essids)
+		self.aps       = self.form_macs(opts.aps)
+		self.stations  = self.form_macs(opts.stations)
+		self.filters   = self.form_macs(opts.filters)
+		self.write     = self.write(opts.write)
+		self.packets   = opts.packets if opts.packets >= 1 else pull.halt("Invalid Number of Packets Specified!", True, pull.RED)
+		self.code      = opts.code    if opts.code    >= 1 else pull.halt("Invalid Code Given!", True, pull.RED)
+		self.delay     = opts.delay   if opts.delay   >= 0 else pull.halt("Invalid Delay Specified!", True, pull.RED)
+
+	def write(self, wr):
+		if wr:
+			return wr
+		else:
+			pull.halt("Capture File Not Provided. No Output will be Stored!", False, pull.RED)
+
+	def form_macs(self, bssids):
+		retval = []
+		if bssids:
+			toloop = bssids.split(",")
+			for bssid in toloop:
+				if re.search(r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", bssid):
+					retval.append(bssid.lower())
+
+		return retval
+
+	def form_essids(self, essids):
+		retval = []
+		if essids:
+			toloop = essids.split(",")
+			for essid in toloop:
+				retval.append(essid)
+
+		return retval
+
+	def channels(self, ch):
+		retval = list(range(1,15)) if self.world else list(range(1,12))
+		if ch:
+			if ch in retval:
+				return [ch]
+			else:
+				pull.halt("Invalid Channel Given.", True, pull.RED)
+		else:
+			return retval
+
+	def interface(self, iface):
+		def getNICnames():
+			ifaces = []
+			dev = open('/proc/net/dev', 'r')
+			data = dev.read()
+			for n in re.findall('[a-zA-Z0-9]+:', data):
+				ifaces.append(n.rstrip(":"))
+			return ifaces
+
+		def confirmMon(iface):
+			co = subprocess.Popen(['iwconfig', iface], stdout=subprocess.PIPE)
+			data = co.communicate()[0].decode()
+			card = re.findall('Mode:[A-Za-z]+', data)[0]	
+			if "Monitor" in card:
+				return True
+			else:
+				return False
+
+		if iface:
+			ifaces = getNICnames()
+			if iface in ifaces:
+				if confirmMon(iface):
+					return iface
+				else:
+					pull.halt("Interface Not In Monitor Mode [%s]" % (pull.RED + iface + pull.END), True, pull.RED)
+			else:
+				pull.halt("Interface Not Found. [%s]" % (pull.RED + iface + pull.END), True, pull.RED)
+		else:
+			pull.halt("Interface Not Provided. Specify an Interface!", True, pull.RED)
+
 def main():
 	parser = argparse.ArgumentParser(add_help=False)
 
@@ -663,6 +779,36 @@ def main():
 		"\r", pull.DARKCYAN
 	)
 
+def mian():
+	parser = argparse.ArgumentParser(add_help=False)
+
+	parser.add_argument('-h', '--help', dest="help", default=False, action="store_true")
+	parser.add_argument('-m', '--mode', dest="mode", default=None , action="store_true")
+
+	(opts, args) = parser.parse_known_args()
+	parser = PARSERX(opts)
+
+	if parser.mode == 1:
+		parsera = argparse.ArgumentParser(add_help=False)
+
+		parsera.add_argument('-i', '--interface'    , dest="interface", default=""   , type=str  )
+		parsera.add_argument('-c', '--channel'      , dest="channels" , default=0    , type=int  )
+		parsera.add_argument('-e', '--essids'       , dest="essids"   , default=""   , type=str  )
+		parsera.add_argument('-a', '--accesspoints' , dest="aps"      , default=""   , type=str  )
+		parsera.add_argument('-s', '--stations'     , dest="stations" , default=""   , type=str  )
+		parsera.add_argument('-f', '--filters'      , dest="filters"  , default=""   , type=str  )
+		parsera.add_argument('-w', '--write'        , dest="write"    , default=""   , type=str  )
+		parsera.add_argument('-p', '--packets'      , dest="packets"  , default=3    , type=int  )
+		parsera.add_argument(      '--code'         , dest="code"     , default=7    , type=int  )
+		parsera.add_argument(      '--delay'        , dest="delay"    , default=0.01 , type=float)
+		parsera.add_argument(      '--world'        , dest="world"    , default=False, action="store_true")
+
+		(opts, args) = parsera.parse_known_args()
+		parsera      = PARSERA(opts)
+
+		handler      = HANDLER(parser.mode, parsera)
+		handler.engage()
+
 if __name__ == "__main__":
 	pull = PULL()
-	main()
+	mian()

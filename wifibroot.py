@@ -646,6 +646,7 @@ class PARSERX:
 class PARSERA:
 
 	def __init__(self, opts):
+		self.world     = self.world
 		self.interface = self.interface(opts.interface)
 		self.channels  = self.channels(opts.channels)
 		self.essids    = self.form_essids(opts.essids)
@@ -656,12 +657,100 @@ class PARSERA:
 		self.packets   = opts.packets if opts.packets >= 1 else pull.halt("Invalid Number of Packets Specified!", True, pull.RED)
 		self.code      = opts.code    if opts.code    >= 1 else pull.halt("Invalid Code Given!", True, pull.RED)
 		self.delay     = opts.delay   if opts.delay   >= 0 else pull.halt("Invalid Delay Specified!", True, pull.RED)
+		self.verbose   = opts.verbose
 
 	def write(self, wr):
 		if wr:
 			return wr
 		else:
 			pull.halt("Capture File Not Provided. No Output will be Stored!", False, pull.RED)
+
+	def form_macs(self, bssids):
+		retval = []
+		if bssids:
+			toloop = bssids.split(",")
+			for bssid in toloop:
+				if re.search(r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", bssid):
+					retval.append(bssid.lower())
+
+		return retval
+
+	def form_essids(self, essids):
+		retval = []
+		if essids:
+			toloop = essids.split(",")
+			for essid in toloop:
+				retval.append(essid)
+
+		return retval
+
+	def channels(self, ch):
+		retval = list(range(1,15)) if self.world else list(range(1,12))
+		if ch:
+			if ch in retval:
+				return [ch]
+			else:
+				pull.halt("Invalid Channel Given.", True, pull.RED)
+		else:
+			return retval
+
+	def interface(self, iface):
+		def getNICnames():
+			ifaces = []
+			dev = open('/proc/net/dev', 'r')
+			data = dev.read()
+			for n in re.findall('[a-zA-Z0-9]+:', data):
+				ifaces.append(n.rstrip(":"))
+			return ifaces
+
+		def confirmMon(iface):
+			co = subprocess.Popen(['iwconfig', iface], stdout=subprocess.PIPE)
+			data = co.communicate()[0].decode()
+			card = re.findall('Mode:[A-Za-z]+', data)[0]	
+			if "Monitor" in card:
+				return True
+			else:
+				return False
+
+		if iface:
+			ifaces = getNICnames()
+			if iface in ifaces:
+				if confirmMon(iface):
+					return iface
+				else:
+					pull.halt("Interface Not In Monitor Mode [%s]" % (pull.RED + iface + pull.END), True, pull.RED)
+			else:
+				pull.halt("Interface Not Found. [%s]" % (pull.RED + iface + pull.END), True, pull.RED)
+		else:
+			pull.halt("Interface Not Provided. Specify an Interface!", True, pull.RED)
+
+class PARSERB:
+
+	def __init__(self, opts):
+		self.world     = self.world
+		self.interface = self.interface(opts.interface)
+		self.channels  = self.channels(opts.channels)
+		self.essids    = self.form_essids(opts.essids)
+		self.aps       = self.form_macs(opts.aps)
+		self.stations  = self.form_macs(opts.stations)
+		self.filters   = self.form_macs(opts.filters)
+		self.write     = self.write(opts.write)
+		self.pauth     = opts.pauth if opts.pauth > 0 else pull.halt("Invalid Number of Authentication Packets Specified!", True, pull.RED)
+		self.passo     = opts.passo if opts.passo > 0 else pull.halt("Invalid Number of Association Packets Specified!", True, pull.RED)
+		self.dauth     = opts.dauth if opts.dauth >= 0 else pull.halt("Invalid Delay Specified for Authentication Packets!", True, pull.RED)
+		self.dasso     = opts.dasso if opts.dasso >= 0 else pull.halt("Invalid Delay Specified for Association Packets!", True, pull.RED)
+		self.verbose   = self.verbose
+
+	def write(self, wr):
+		if wr:
+			if wr.endswith(".pmkid"):
+				return wr
+			elif wr.endswith("."):
+				return (wr + "pmkid")
+			else:
+				return (wr + ".pmkid")
+		else:
+			return False
 
 	def form_macs(self, bssids):
 		retval = []
@@ -809,7 +898,7 @@ def main():
 		parserc.add_argument('-d', '--defer'        , dest="defer"    , default=0 , type=int )
 		parserc.add_argument('-e', '--essid'        , dest="essid"    , default="", type=str )
 		parserc.add_argument('-w', '--write'        , dest="write"    , default="", type=str )
-		parserc.add_argument(      '--verbose'     , dest="verbose"   , default=False, action="store_true")
+		parserc.add_argument(      '--verbose'      , dest="verbose"   , default=False, action="store_true")
 
 		(opts, args) = parserc.parse_known_args()
 		parserc      = PARSERC(opts)

@@ -72,22 +72,11 @@ class PMKID:
 		self.auth       = auth
 		self.stations   = stations
 		self.beacon     = beacon
-		self.output     = self.output(outfname)
+		self.output     = outfname
 		self.pauth      = pauth
 		self.passo      = passo
 		self.dauth      = dauth
 		self.dasso      = dasso
-
-	def output(self, fl):
-		if fl:
-			if fl.endswith(".pmkid"):
-				return fl
-			elif fl.endswith("."):
-				return (fl + "pmkid")
-			else:
-				return (fl + ".pmkid")
-		else:
-			return False
 
 	def extract_sn_rc(self, pkt):
 		try:

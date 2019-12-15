@@ -13,6 +13,7 @@ from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import Dot11Beacon
 from scapy.layers.dot11 import Dot11Elt
 from scapy.layers.dot11 import Dot11EltRSN
+from scapy.layers.dot11 import Dot11ProbeResp
 from scapy.layers.dot11 import Dot11FCS
 from scapy.layers.dot11 import Dot11EltMicrosoftWPA
 from scapy.layers.dot11 import Dot11EltCountry
@@ -212,6 +213,10 @@ class SNIFFER:
 		encryption = toappend.get('encryption')
 		cipher  = toappend.get('cipher')
 		auth    = toappend.get('auth')
+		beacon  = toappend.get('beacon')
+
+		if not beacon.haslayer(Dot11Beacon):
+			toappend['beacon'] = None
 
 		if ((not self.aps) or (self.aps and bssid in self.aps)):
 			if ((not self.essids) or (self.essids and essid in self.essids)):
@@ -223,11 +228,13 @@ class SNIFFER:
 						self.__ACCESSPOINTS[ bssid ][ 'encryption' ] = encryption
 						self.__ACCESSPOINTS[ bssid ][ 'cipher' ] = cipher
 						self.__ACCESSPOINTS[ bssid ][ 'auth' ] = auth
+						if toappend['beacon']:
+							self.__ACCESSPOINTS[ bssid ][ 'beacon' ] = toappend[ 'beacon' ]
 					else:
 						self.__ACCESSPOINTS[ bssid ] = toappend
 
 	def filter(self, pkt):
-		if pkt.haslayer(Dot11Beacon):
+		if pkt.haslayer(Dot11Beacon) or pkt.haslayer(Dot11ProbeResp):
 			bssid      = self.extract_bssid(pkt)
 			essid      = self.extract_essid(pkt)
 			channel    = self.extract_channel(pkt)

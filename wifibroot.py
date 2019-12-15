@@ -49,7 +49,7 @@ class SLAB_A:
 		self.aps       = prs.aps
 		self.stations  = prs.stations
 		self.filters   = prs.filters
-		self.output    = prs.output
+		self.write     = prs.write
 		self.packets   = prs.packets
 		self.code      = prs.code
 		self.delay     = prs.delay
@@ -173,7 +173,7 @@ class SLAB_A:
 				pull.GREEN
 			)
 
-		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, self.output, self.packets, self.code, self.delay)
+		capture = CAPTURE(self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations, self.write, self.packets, self.code, self.delay)
 		capture.channeler()
 
 		pull.print(
@@ -226,7 +226,7 @@ class SLAB_B:
 		self.aps       = prs.aps
 		self.stations  = prs.stations
 		self.filters   = prs.filters
-		self.output    = prs.output
+		self.write     = prs.write
 		self.pauth     = prs.pauth
 		self.passo     = prs.passo
 		self.dauth     = prs.dauth
@@ -343,7 +343,7 @@ class SLAB_B:
 
 		pmkid = PMKID(
 						self.interface, bssid, essid, channel, power, device, encryption, cipher, auth, beacon, stations,
-						self.output, self.pauth, self.passo, self.dauth, self.dasso
+						self.write, self.pauth, self.passo, self.dauth, self.dasso
 					)
 
 		pmkid.channeler()
@@ -646,7 +646,7 @@ class PARSERX:
 class PARSERA:
 
 	def __init__(self, opts):
-		self.world     = self.world
+		self.world     = opts.world
 		self.interface = self.interface(opts.interface)
 		self.channels  = self.channels(opts.channels)
 		self.essids    = self.form_essids(opts.essids)
@@ -727,7 +727,7 @@ class PARSERA:
 class PARSERB:
 
 	def __init__(self, opts):
-		self.world     = self.world
+		self.world     = opts.world
 		self.interface = self.interface(opts.interface)
 		self.channels  = self.channels(opts.channels)
 		self.essids    = self.form_essids(opts.essids)
@@ -739,7 +739,7 @@ class PARSERB:
 		self.passo     = opts.passo if opts.passo > 0 else pull.halt("Invalid Number of Association Packets Specified!", True, pull.RED)
 		self.dauth     = opts.dauth if opts.dauth >= 0 else pull.halt("Invalid Delay Specified for Authentication Packets!", True, pull.RED)
 		self.dasso     = opts.dasso if opts.dasso >= 0 else pull.halt("Invalid Delay Specified for Association Packets!", True, pull.RED)
-		self.verbose   = self.verbose
+		self.verbose   = opts.verbose
 
 	def write(self, wr):
 		if wr:
@@ -841,7 +841,7 @@ def main():
 
 		pull.print(
 			"^",
-			"Starting Broot Engine...",
+			"Starting Broot Handshake/Capturer...",
 			pull.DARKCYAN
 		)
 
@@ -876,7 +876,7 @@ def main():
 
 		pull.print(
 			"^",
-			"Starting Broot Engine...",
+			"Starting Broot PMKID/Capturer...",
 			pull.DARKCYAN
 		)
 
@@ -905,7 +905,7 @@ def main():
 
 		pull.print(
 			"^",
-			"Starting Broot Engine...",
+			"Starting Broot Engine [EAPOLS]...",
 			pull.DARKCYAN
 		)
 

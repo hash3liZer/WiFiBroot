@@ -18,6 +18,10 @@ try:
 	from scapy.layers.dot11 import EAPOL
 except ImportError:
 	from scapy.layers.eap import EAPOL
+try:
+	long
+except NameError:
+	long = int
 
 
 class DEAUTH:
@@ -48,7 +52,7 @@ class DEAUTH:
 		try:
 			self.pull.info("Waiting for the Access Point MAC address to receive... [30]")
 			sniff(iface=self.iface, prn=self.collector, timeout=30)
-		except ImportError, e:
+		except ImportError as e:
 			if str(e) == "!":
 				self.__AVAIL = True
 
@@ -80,7 +84,7 @@ class DEAUTH:
 			self.pull.up("%d %s %s<>%s %s %s[DEAUTHENTICATION]%s" % (self.deauth, self.ap.replace(':', '').upper(),\
 										 	 				self.pull.RED, self.pull.END, self.cl.replace(':', '').upper(), \
 										 	 				self.pull.BLUE, self.pull.END ))
-		
+
 		sendp(_pkt_ap, iface=self.iface, count=self.deauth, verbose=False)
 		sendp(_pkt_cl, iface=self.iface, count=self.deauth, verbose=False)
 		time.sleep(1)
@@ -120,7 +124,7 @@ class DEAUTH:
 
 
 	def flood_silencer(self, pkt):
-		if pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == 2L and not pkt.haslayer(EAPOL):
+		if pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == long(2) and not pkt.haslayer(EAPOL):
 			_sn = pkt.getlayer(Dot11).addr2
 			_rc = pkt.getlayer(Dot11).addr1
 

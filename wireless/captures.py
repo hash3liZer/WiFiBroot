@@ -1,3 +1,4 @@
+from __future__ import print_function
 from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import Raw
 from scapy.layers.dot11 import Dot11Auth
@@ -20,8 +21,11 @@ import hmac
 import hashlib
 import string
 import sys
-import sha
 
+try:
+	xrange
+except NameError:
+	xrange = range
 
 class CAPTURE_HAND:
 
@@ -39,7 +43,7 @@ class CAPTURE_HAND:
 		self.bssid = ''
 		self.cl = ''
 
-	def opener(self, _file): 
+	def opener(self, _file):
 		self.pull.up("Reading File: %s[%s]%s" % (self.pull.BLUE, _file, self.pull.END))
 		return rdpcap(_file)
 
@@ -123,7 +127,7 @@ class CAPTURE_HAND:
 				return c_pass
 		else:
 			return c_pass
-	
+
 	def print_back(self):
 		time.sleep(2)
 		if self.verbose:
@@ -158,7 +162,7 @@ class CAPTURE_HAND:
 		i    = 0
 		R    = ''
 		while i<=((blen*8+159)/160):
-			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),sha)
+			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),hashlib.sha1)
 			i+=1
 			R = R+hmacsha1.digest()
 		return R[:blen]
@@ -173,9 +177,9 @@ class CAPTURE_HAND:
 			_mic_ = hmac.new(_ptk[0:16], self.payload, hashlib.sha1).hexdigest()[:32]
 			if self.mic == _mic or self.mic == _mic_:
 				self.pull.use("CRACKED! Key Found %s[%s]%s" % (self.pull.GREEN, _pass, self.pull.END))
-				self.pull.right("PMK =>"); print self.hexdump(_pmk)
-				self.pull.right("PTK =>"); print self.hexdump(_ptk)
-				self.pull.right("MIC =>"); print self.hexdump(_mic if self.mic == _mic else _mic_)
+				self.pull.right("PMK =>"); print(self.hexdump(_pmk))
+				self.pull.right("PTK =>"); print(self.hexdump(_ptk))
+				self.pull.right("MIC =>"); print(self.hexdump(_mic if self.mic == _mic else _mic_))
 				return
 			else:
 				if _pass != self.passes[-1]:
@@ -270,8 +274,8 @@ class CAPTURE_PMKID:
 			(_pass, _pmk) = self.crack(_pm, _ap, _cl, _ess)
 			if _pass:
 				self.pull.use("CRACKED! Key Found %s[%s]%s" % (self.pull.GREEN, _pass, self.pull.END))
-				self.pull.right("PMK =>"); print self.hexdump(_pmk)
-				self.pull.right("PMKID =>"); print self.hexdump(_pm)
+				self.pull.right("PMK =>"); print(self.hexdump(_pmk))
+				self.pull.right("PMKID =>"); print(self.hexdump(_pm))
 			else:
 				self.pull.error("Not Found! Password Not in Dictionary.")
 

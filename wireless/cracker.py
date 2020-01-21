@@ -1,14 +1,13 @@
 
 from scapy.layers.dot11 import Dot11
 from scapy.layers.dot11 import Dot11Beacon
-from scapy.layers.dot11 import Raw    
+from scapy.layers.dot11 import Raw
 from pull import Pully
 from pbkdf2 import PBKDF2
 from screen import Display
 from threading import Thread as threading
 import binascii
 import hmac
-import sha
 import hashlib
 import sys
 import re
@@ -17,7 +16,12 @@ import string
 try:
 	from scapy.layers.dot11 import EAPOL
 except ImportError:                                     # Support for new versions
-	from scapy.layers.eap import EAPOL 
+	from scapy.layers.eap import EAPOL
+
+try:
+	xrange
+except NameError:
+	xrange = range
 
 pull = Pully()
 
@@ -35,7 +39,7 @@ class PSK:
 	C_PMK__ = ''
 	C_MIC__ = ''
 
-	# Just a line break. Keep things tidy and clean. 
+	# Just a line break. Keep things tidy and clean.
 
 	def __init__(self, eapol, essid, enc, dictionary, verbose, key=None):
 		self.pkt_i = eapol[0]
@@ -98,7 +102,7 @@ class PSK:
 		i    = 0
 		R    = ''
 		while i<=((blen*8+159)/160):
-			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),sha)
+			hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),hashlib.sha1)
 			i+=1
 			R = R+hmacsha1.digest()
 		return R[:blen]
@@ -150,7 +154,7 @@ class PSK:
 			self.C_PASS__, self._count_ = pass__.rstrip('\n'), self._count_+1
 
 			pull.up('Current Password: %s' % self.printing_pass(last_pass__, pass__.rstrip('\n'))); last_pass__ = pass__.rstrip('\n')
-	
+
 			if self.__CRACKED[0] == True:
 				return (self.__CRACKED[1], self.hexdump(self.C_PMK__), \
 							 self.hexdump(self.C_PTK__), self.hexdump(self.C_MIC__))
@@ -211,7 +215,7 @@ class eAPoL:
 					self.__EAPOLS[1] = pkt
 				elif __sn == tgt and __rc == self.bssid and nonce == fNONCE and mic != fMIC:
 					self.__EAPOLS[3] = pkt
-		
+
 		if 0 not in self.__EAPOLS:
 			return True
 		else:

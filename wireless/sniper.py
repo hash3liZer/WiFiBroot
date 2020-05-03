@@ -18,10 +18,6 @@ try:
 	from scapy.layers.dot11 import EAPOL
 except ImportError:
 	from scapy.layers.eap import EAPOL
-try:
-	long
-except NameError:
-	long = int
 
 class Sniper:
 
@@ -64,7 +60,7 @@ class Sniper:
 				self.pull.use("Clients %s - [Found %s]" % (self.bssid.replace(':', '').upper(), len(self.__CONNECTECD_CL)))
 
 	def cl_generator_replay(self, pkt):
-		if pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == long(2) and not pkt.haslayer(EAPOL):
+		if pkt.haslayer(Dot11) and pkt.getlayer(Dot11).type == 2L and not pkt.haslayer(EAPOL):
 			__sn = pkt.getlayer(Dot11).addr2
 			__rc = pkt.getlayer(Dot11).addr1
 			if __sn == self.bssid and not (__sn.replace(':', '').lower() in self.out__):

@@ -1,20 +1,14 @@
-from __future__ import print_function
 
 import sys
 import os
 import random
-
-try:
-	raw_input
-except NameError:
-	raw_input = input
 
 __log__ = r'''%s
  _        ___  ___ ___  ___   ___
  \\  _ /\*\___*\__\\__\/   \ /   \\___
   \  \\  \\\   \\__\\ /\  ) \\  ) \\  \
    \__\\__\\\   \\__\\ \\__ / \___/ \__\
-%s
+%s 
           %sv1.0. Coded by @hash3liZer.%s
 '''
 
@@ -30,13 +24,13 @@ Modes:
     03    Perform Manaul cracking on available
           capture types. See --list-types               3
     04    Deauthentication. Disconnect two stations
-          and jam the traffic.                          4
+          and jam the traffic.                          4 
 
 Use -h, --help after -m, --mode to get help on modes.
 '''
 
 __1help__='''
-Mode:
+Mode: 
    01      Capture 4-way handshake and crack MIC code    1
 
 Options:
@@ -50,9 +44,9 @@ Options:
    -w, --write        Write Captured handshake to
                       a seperate file                    NO
        --deauth       Number of Deauthentication
-                      frames to send                     NO
+                      frames to send                     NO 
 
-Filters:
+Filters: 
    -e, --essid         ESSID of listening network
    -b, --bssid         BSSID of target network.
    -c, --channel       Channel interface should be listening
@@ -60,7 +54,7 @@ Filters:
 '''
 
 __2help__='''
-Mode:
+Mode: 
    02      Captures and Crack PMKID (PMKID Attack)       1
 
 Options:
@@ -72,7 +66,7 @@ Options:
    -w, --write        Write Captured handshake to
                       a seperate file                    NO
 
-Filters:
+Filters: 
    -e, --essid         ESSID of listening network
    -b, --bssid         BSSID of target network.
    -c, --channel       Channel interface should be listening
@@ -80,18 +74,18 @@ Filters:
 '''
 
 __3help__='''
-Mode:
+Mode: 
    03    Perform Manaul cracking on available capture
          types. See --list-types                         3
 
 Options:
-   Args               Description                      Required
+   Args               Description                      Required 
    -h, --help         Show this help manual              NO
        --list-types   List available cracking types      NO
        --type         Type of capture to crack           YES
    -v, --verbose      Turn off Verbose mode.             NO
    -d, --dictionary   Dictionary for Cracking            YES
-   -e, --essid        ESSID of target network.
+   -e, --essid        ESSID of target network. 
                       Only for HANDSHAKE Type            YES
    -r, --read         Captured file to crack             YES
 '''
@@ -113,7 +107,7 @@ Options:
 '''
 
 __list__='''
-Types:
+Types: 
     #         Type            Value
     1         HANDSHAKE       handshake
     2         PMKID           pmkid
@@ -164,19 +158,19 @@ class Pully:
 		self.LINEUP = ''
 
 	def info(self, statement, *args, **kwargs):
-		print("%s[*]%s %s" % (self.BOLD+self.YELLOW, self.END, statement))
+		print "%s[*]%s %s" % (self.BOLD+self.YELLOW, self.END, statement)
 		return
 
 	def error(self, statement, *args, **kwargs):
-		print("%s[!]%s %s" % (self.BOLD+self.RED, self.END, statement))
+		print "%s[!]%s %s" % (self.BOLD+self.RED, self.END, statement)
 		return
 
 	def up(self, statement, *args, **kwargs):
-		print("%s[^]%s %s" % (self.BOLD+self.BLUE, self.END, statement))
+		print "%s[^]%s %s" % (self.BOLD+self.BLUE, self.END, statement)
 		return
 
 	def use(self, statement, *args, **kwargs):
-		print("%s[+]%s %s" % (self.BOLD+self.GREEN, self.END, statement))
+		print "%s[+]%s %s" % (self.BOLD+self.GREEN, self.END, statement)
 		return
 
 	def question(self, statement, *args, **kwargs):
@@ -184,21 +178,21 @@ class Pully:
 		return q
 
 	def delete(self, statement, *args, **kwargs):
-		print("%s[#]%s %s" % (self.BOLD+self.CYAN, self.END, statement))
+		print "%s[#]%s %s" % (self.BOLD+self.CYAN, self.END, statement)
 		return
 
 	def special(self, statement, *args, **kwargs):
-		print("%s[~]%s %s" % (self.BOLD+self.RED, self.END, statement))
+		print "%s[~]%s %s" % (self.BOLD+self.RED, self.END, statement)
 
 	def spacer(self, statement, *args, **kwargs):
-		print("    %s" % (statement))
+		print "    %s" % (statement)
 
 	def linebreak(self):
-		print("\n")
+		print "\n"
 		return
 
 	def right(self, statement, *args, **kwargs):
-		print("%s[>]%s %s" % (self.BOLD+self.DARKCYAN, self.END, statement))
+		print "%s[>]%s %s" % (self.BOLD+self.DARKCYAN, self.END, statement)
 
 	def lineup(self, *args, **kwargs):
 		sys.stdout.write(self.LINEUP)
@@ -208,20 +202,20 @@ class Pully:
 		return random.choice(seq)
 
 	def logo(self):
-		print(__log__ % (self.BOLD+self.random_picker(), self.END, self.BOLD, self.END))
+		print __log__ % (self.BOLD+self.random_picker(), self.END, self.BOLD, self.END)
 
 	def help(self, _m):
 		if _m == 1:
-			print(__1help__)
+			print __1help__
 		elif _m == 2:
-			print(__2help__)
+			print __2help__
 		elif _m == 3:
-			print(__3help__)
+			print __3help__
 		elif _m == 4:
-			print(__4help__)
+			print __4help__
 
 	def modes(self):
-		print(__mode__)
+		print __mode__
 
 	def listTypes(self):
-		print(__list__)
+		print __list__

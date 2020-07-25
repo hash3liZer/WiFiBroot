@@ -8,6 +8,8 @@ WiFiBroot is built to provide clients all-in-one facility for cracking WiFi (WPA
 
 ## Installation: 
 
+It only works with **Python 2**
+
 WiFiBroot heavily depends on scapy. So, you would need scapy installed. Almost, every other library would likely be installed on your system. Make sure the version you install for scapy should be `<=2.4.0`. Newer versions are likely to throw some unknown errors.
 
 ```

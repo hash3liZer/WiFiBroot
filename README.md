@@ -20,6 +20,13 @@ The script is supposed to be run under **sudo** but it will still work even if n
 ```
 $ sudo python wifibroot.py -i [interface] -d /path/to/dictionary -m [mode]
 ``` 
+### Install in Termux
+This is now abalable in android system just install **Termux** and type the command bellow: 
+```
+git clone https://github.com/hash3liZer/WiFiBroot
+cd WiFiBroot
+python WiFiBroot
+```
 
 ## Documentation : ##
 
@@ -150,3 +157,6 @@ $ python wifibroot.py --mode 4 -i wlan1mon --ap [AP MAC] --client [STA MAC] --ve
 Website: [https://www.shelvoide.com](https://www.shellvoide.com)<br>
 Twitter: [@hash3liZer](https://twitter.com/hash3liZer)<br>
 Email: [admin@shellvoide.com](mailto://admin@shellvoide.com)
+### Conclusion
+At last i requested you please don't use for any illigal activities.
+After using it don't forget to give me a star.

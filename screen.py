@@ -71,6 +71,7 @@ class Display:
 						self.__WiFiAP.append(ap)
 
 			for ap in self.__WiFiAP:
+				ap['essid'] = ap['essid'].rstrip('\x00')
 				if self.verbose:
 					tabulator__.append([ap['count'], ap['essid'], ap['pwr'], ap['auth'], ap['cipher'], \
 							ap['psk'], ap['channel'], ap['bssid'].upper(), ap['vendor'], ap['clients']])
